@@ -1,0 +1,121 @@
+@using EgitimPrj.Models.ViewModel
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Öğretmen Kayıt";
+}
+
+<div class="container-fluid px-3 py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-6">
+            <div class="register-card glass-card rounded-4 p-4 p-md-5 shadow-lg">
+                <div class="text-center mb-4">
+                    <div class="register-icon mb-3">
+                        <i class="bi bi-mortarboard text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="fw-bold text-dark">Öğretmen Hesabı Oluştur</h2>
+                    <p class="text-muted">Öğretmen panelini kullanmak için kayıt olun</p>
+                </div>
+
+                <form asp-action="Register" asp-controller="Teacher" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input asp-for="Name" type="text" class="form-control border-start-0" placeholder="Adınız" />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SurName" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input asp-for="SurName" type="text" class="form-control border-start-0" placeholder="Soyadınız" />
+                            </div>
+                            <span asp-validation-for="SurName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-envelope text-muted"></i>
+                            </span>
+                            <input asp-for="Email" type="email" class="form-control border-start-0" placeholder="ornek@okul.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Password" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock text-muted"></i>
+                            </span>
+                            <input asp-for="Password" type="password" class="form-control border-start-0" placeholder="Şifrenizi girin" autocomplete="new-password" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button"
+                                    onclick="togglePassword('Password','teacherPasswordToggle')">
+                                <i class="bi bi-eye" id="teacherPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock-fill text-muted"></i>
+                            </span>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control border-start-0" placeholder="Şifrenizi tekrar girin" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button"
+                                    onclick="togglePassword('ConfirmPassword','teacherConfirmPasswordToggle')">
+                                <i class="bi bi-eye" id="teacherConfirmPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input asp-for="AcceptTerms" class="form-check-input" />
+                            <label asp-for="AcceptTerms" class="form-check-label">
+                                <a href="#" class="text-decoration-none text-primary">Kullanım Şartları</a> ve
+                                <a href="#" class="text-decoration-none text-primary">Gizlilik Politikası</a>'nı kabul ediyorum
+                            </label>
+                        </div>
+                        <span asp-validation-for="AcceptTerms" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-gradient btn-lg btn-pill">
+                            <i class="bi bi-person-plus me-2"></i>Öğretmen Hesabı Oluştur
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-3">Zaten öğretmen hesabınız var mı?</p>
+                        <a asp-controller="Teacher" asp-action="Login" class="btn btn-outline-primary btn-pill">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Öğretmen Girişi
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
+

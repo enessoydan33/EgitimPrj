@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EgitimPrj</title>
+    <script type="importmap"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/EgitimPrj.styles.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        bool isLoggedIn = Context.Session.GetString("IsLoggedIn") == "true";
+        bool isTeacherLoggedIn = Context.Session.GetString("IsTeacherLoggedIn") == "true";
+        string? userName = Context.Session.GetString("Name");
+        string? userId = Context.Session.GetString("UserId");
+    }
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-gradient">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold text-white" asp-action="Index" asp-controller="Dashboard">CoMentor</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    @if (isTeacherLoggedIn)
+                    {
+                        <!-- Sadece öğretmen giriş yaptıysa: yalnızca Öğretmen Paneli -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a asp-controller="Teacher" asp-action="TeacherPanel" class="nav-link text-white">
+                                    <i class="bi bi-person-workspace me-2"></i>Öğretmen Paneli
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    else if (isLoggedIn)
+                    {
+                        <!-- Öğrenci giriş yaptıysa: Dashboard menüleri -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="Index" class="nav-link text-white">
+                                    <i class="bi bi-house-door-fill me-2"></i>Ana Sayfa
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="AIWork" class="nav-link text-white">
+                                    <i class="bi bi-stars me-2"></i>AI Çalışma
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="Lessons" class="nav-link text-white">
+                                    <i class="bi bi-journal-text me-2"></i>Dersler
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="ExamTracking" class="nav-link text-white">
+                                    <i class="bi bi-graph-up-arrow me-2"></i>Deneme Takibi
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="Schedule" class="nav-link text-white">
+                                    <i class="bi bi-calendar-check me-2"></i>Takvim
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="Leaderboard" class="nav-link text-white">
+                                    <i class="bi bi-trophy-fill me-2"></i>Liderlik
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                <div class="ms-auto">
+                    @if (isLoggedIn || isTeacherLoggedIn)
+                    {
+                        <div class="d-flex align-items-center">
+                            <div class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    Hesabım
+                                    @if (!string.IsNullOrEmpty(userId))
+                                    {
+                                        <span class="ms-1 small text-light">(#@userId)</span>
+                                    }
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-action="UpdatePassword" asp-controller="User"><i class="bi bi-gear me-2"></i>Şifre Değiştir</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="User" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-left me-2"></i>Çıkış Yap
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex gap-2">
+                            <a asp-controller="User" asp-action="Index" class="btn btn-outline-light">Giriş Yap</a>
+                            <a asp-controller="User" asp-action="Register" class="btn btn-light text-dark">Kayıt Ol</a>
+                        </div>
+                    }
+                    @RenderSection("Styles", required: false)
+
+                </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - EgitimPrj - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

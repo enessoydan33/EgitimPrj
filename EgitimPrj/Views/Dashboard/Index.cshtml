@@ -1,0 +1,648 @@
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="dashboard-container">
+    <!-- Hoş Geldiniz Bölümü -->
+    <!-- Hoş Geldiniz Bölümü -->
+    <div class="modern-page-header header-welcome">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-house-door-fill"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Merhaba! 👋</h1>
+                <p>Bugün de harika bir gün geçirelim!</p>
+            </div>
+        </div>
+        <div class="modern-header-actions d-flex gap-3">
+            <div class="welcome-badge streak-badge">
+                <i class="bi bi-fire"></i>
+                <span id="home-streak">-</span>
+            </div>
+            <div class="welcome-badge xp-badge">
+                <i class="bi bi-star-fill"></i>
+                <span id="home-total-xp">-</span>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- Günlük Hedef -->
+    <div class="daily-goal-section mb-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="daily-goal-card">
+                    <h3 class="goal-title">Günlük Hedef</h3>
+                    <div class="goal-progress">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: 70%"></div>
+                        </div>
+                        <span class="progress-text">7/10</span>
+                    </div>
+                    <p class="goal-message">Bugün 3 ders daha tamamla!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Bugün Ne Yapmak İstiyorsun? -->
+    <div class="section-title mb-4">
+        <h2>Bugün ne yapmak istiyorsun?</h2>
+    </div>
+
+    <!-- Ana Kartlar -->
+    <div class="row g-4 mb-5">
+        <!-- AI Ders Programı -->
+        <div class="col-lg-4 col-md-6">
+            <div class="modern-card ai-modern-card" onclick="location.href='@Url.Action("AIWork", "Dashboard")'">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="card-badge">
+                        <span class="badge-text">Yeni</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">AI Ders Programı</h3>
+                    <p class="card-description">Kişiselleştirilmiş AI destekli ders programı oluşturun</p>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Akıllı zamanlama</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Kişisel öneriler</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Adaptif öğrenme</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dersler -->
+        <div class="col-lg-4 col-md-6">
+            <div class="modern-card lessons-modern-card" onclick="location.href='@Url.Action("Lessons", "Dashboard")'">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="card-badge">
+                        <span class="badge-text">Aktif</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Dersler</h3>
+                    <p class="card-description">Kapsamlı ders içerikleri ve interaktif öğrenme</p>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Video dersler</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Alıştırmalar</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>İlerleme takibi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deneme Takibi -->
+        <div class="col-lg-4 col-md-6">
+            <div class="modern-card exam-modern-card" onclick="location.href='@Url.Action("ExamTracking", "Dashboard")'">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+                    <div class="card-badge">
+                        <span class="badge-text">Analiz</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">Deneme Takibi</h3>
+                    <p class="card-description">Sınav performansınızı takip edin ve analiz edin</p>
+                    <div class="card-features">
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Detaylı raporlar</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Performans analizi</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Gelişim takibi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="card-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Leaderboard ve Başarılar (Sekmeli) + Duyuru ve Ödevler -->
+    <div class="row mt-5 align-items-stretch">
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="leaderboard-widget glass-card p-0 h-100">
+                <div class="leaderboard-widget-header">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div class="leaderboard-title">
+                            <div class="leaderboard-icon"><i class="bi bi-trophy"></i></div>
+                            <div>
+                                <h3 class="mb-0">Sıralama ve Başarılar</h3>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark" id="home-leaderboard-status">Yükleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="px-4 mt-3">
+                    <ul class="nav nav-tabs" id="leaderboardTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="rankings-tab" data-bs-toggle="tab" data-bs-target="#rankings-pane" type="button" role="tab" aria-controls="rankings-pane" aria-selected="true">
+                                <i class="bi bi-list-ol me-1"></i> Genel Sıralama
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements-pane" type="button" role="tab" aria-controls="achievements-pane" aria-selected="false">
+                                <i class="bi bi-award me-1"></i> Başarılarım 
+                                <span class="badge bg-secondary ms-1 rounded-pill" id="achievements-tab-count">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="leaderboard-widget-body tab-content" id="leaderboardTabsContent">
+                    <!-- Tab 1: Sıralama -->
+                    <div class="tab-pane fade show active" id="rankings-pane" role="tabpanel" aria-labelledby="rankings-tab">
+                        <div class="leaderboard-xp-grid" id="home-xp-grid">
+                            <div class="leaderboard-xp-item">
+                                <div class="label">Toplam XP</div>
+                                <div class="value" id="home-xp-total">-</div>
+                            </div>
+                            <div class="leaderboard-xp-item">
+                                <div class="label">Bugün XP</div>
+                                <div class="value" id="home-xp-today">-</div>
+                            </div>
+                            <div class="leaderboard-xp-item">
+                                <div class="label">Hafta XP</div>
+                                <div class="value" id="home-xp-week">-</div>
+                            </div>
+                            <div class="leaderboard-xp-item">
+                                <div class="label">Streak</div>
+                                <div class="value" id="home-xp-streak">-</div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle mb-0" id="home-leaderboard-table">
+                                <thead>
+                                    <tr class="text-muted small">
+                                        <th style="width:64px;">#</th>
+                                        <th>Ad</th>
+                                        <th class="text-end">XP</th>
+                                        <th class="text-end">Streak</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-muted">Yükleniyor...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Başarılar -->
+                    <div class="tab-pane fade" id="achievements-pane" role="tabpanel" aria-labelledby="achievements-tab">
+                        <div class="p-4">
+                            <div class="achievements-grid" id="home-achievements-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
+                                <div class="text-muted small">Yükleniyor...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duyuru ve Ödevler Widget -->
+        <div class="col-lg-4">
+            <div class="announcements-widget glass-card p-0 h-100 d-flex flex-column">
+                <div class="leaderboard-widget-header">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div class="leaderboard-title">
+                            <div class="leaderboard-icon"><i class="bi bi-bell"></i></div>
+                            <div>
+                                <h3 class="mb-0 fs-5">Duyuru & Ödevler</h3>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">3 Yeni</span>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="px-3 mt-3">
+                    <ul class="nav nav-tabs nav-justified" id="notificationTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active small py-2" id="announcements-tab" data-bs-toggle="tab" data-bs-target="#announcements-pane" type="button" role="tab">
+                                <i class="bi bi-megaphone me-1"></i> Duyuru
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link small py-2" id="homeworks-tab" data-bs-toggle="tab" data-bs-target="#homeworks-pane" type="button" role="tab">
+                                <i class="bi bi-journal-text me-1"></i> Ödev
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tab-content flex-grow-1 p-3 overflow-auto custom-scrollbar" id="notificationTabsContent" style="max-height: 400px;">
+                    <!-- Tab 1: Duyurular -->
+                    <div class="tab-pane fade show active" id="announcements-pane" role="tabpanel">
+                        <div class="d-flex flex-column gap-3" id="student-announcements-container">
+                            <div class="text-muted small">Yükleniyor...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Ödevler -->
+                    <div class="tab-pane fade" id="homeworks-pane" role="tabpanel">
+                        <div class="d-flex flex-column gap-3" id="student-homeworks-container">
+                            <div class="text-muted small">Yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Hızlı İstatistikler -->
+    <div class="row mt-5">
+        <div class="stats-section">
+                <h3 class="stats-title">Hızlı İstatistikler</h3>
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">24</h4>
+                                <p class="stat-label">Saat Çalışma</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-trophy"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number" id="quick-stat-achievements">-</h4>
+                                <p class="stat-label">Kazanılan Başarı</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">85%</h4>
+                                <p class="stat-label">Ortalama Başarı</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card" id="streak-stat-card">
+                             <!-- Streak stat card dynamic content will be handled by JS -->
+                            <div class="stat-icon">
+                                <i class="bi bi-fire"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number" id="quick-stat-streak">-</h4>
+                                <p class="stat-label">Günlük Streak</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- Son Aktiviteler -->
+    <div class="row mt-5">
+        <div class="activity-section">
+                <h3 class="activity-title">Son Aktiviteler</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="bi bi-play-circle-fill"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h5>Matematik Dersi Tamamlandı</h5>
+                            <p>İntegral konusu başarıyla tamamlandı</p>
+                            <span class="activity-time">2 saat önce</span>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h5>Deneme Sınavı</h5>
+                            <p>TYT Deneme Sınavı #15 tamamlandı - %78 başarı</p>
+                            <span class="activity-time">1 gün önce</span>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    /* Ek stiller */
+</style>
+}
+
+@section Scripts {
+<script>
+(() => {
+    const setStatus = (text, cls = "bg-light text-dark") => {
+        const el = document.getElementById('home-leaderboard-status');
+        if (!el) return;
+        el.className = `badge ${cls}`;
+        el.textContent = text;
+    };
+
+    const fetchJson = window.AppUtils?.fetchJson ?? (async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    });
+
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = value;
+    };
+
+
+
+    const renderXp = (data) => {
+        const totalXp = data?.totalXp ?? data?.TotalXp ?? 0;
+        const todayXp = data?.todayXp ?? data?.TodayXp ?? 0;
+        const weekXp = data?.weekXp ?? data?.WeekXp ?? 0;
+
+        setText('home-xp-total', totalXp);
+        setText('home-xp-today', todayXp);
+        setText('home-xp-week', weekXp);
+
+        setText('home-total-xp', `${totalXp} XP`);
+    };
+
+    const renderLeaderboard = (data) => {
+        const tbody = document.querySelector('#home-leaderboard-table tbody');
+        if (!tbody) return;
+        const rankings = data?.rankings || data?.Rankings || [];
+        if (!rankings.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-muted">Kayıt yok</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = rankings.slice(0, 10).map(item => {
+            const rank = item.rank || item.Rank || '-';
+            const name = item.name || item.Name || '';
+            const surname = item.surname || item.Surname || '';
+            const totalXp = item.totalXp || item.TotalXp || 0;
+            const streak = item.currentStreak || item.CurrentStreak || 0;
+            return `
+                <tr class="leaderboard-row">
+                    <td><span class="leaderboard-rank">${rank}</span></td>
+                    <td>
+                        <div class="fw-semibold">${name} ${surname}</div>
+                    </td>
+                    <td class="text-end fw-semibold">${totalXp}</td>
+                    <td class="text-end"><span class="leaderboard-streak">${streak}</span></td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    const renderAchievements = (achievements) => {
+        const container = document.getElementById('home-achievements-container');
+        if (!container) return;
+        
+        if (!achievements || achievements.length === 0) {
+            container.innerHTML = `<div class="text-muted small">Henüz başarı tanımı bulunamadı.</div>`;
+            return;
+        }
+
+        const earnedCount = achievements.filter(a => 
+            (a.isEarned === true) || (String(a.isEarned).toLowerCase() === 'true') || (a.IsEarned === true)
+        ).length;
+        setText('quick-stat-achievements', earnedCount);
+        setText('achievements-tab-count', earnedCount);
+
+        container.innerHTML = achievements.map(a => {
+            const name = a.name || a.Name || 'Başarı';
+            const desc = a.description || a.Description || '';
+            const icon = a.icon || a.Icon || 'bi-star';
+            const color = a.badgeColor || a.BadgeColor || '#FFD700';
+            const isEarned = (a.isEarned === true) || (String(a.isEarned).toLowerCase() === 'true') || (a.IsEarned === true);
+            
+            const cardStyle = isEarned 
+                ? `border-top: 3px solid ${color};` 
+                : `border-top: 3px solid #ccc; filter: grayscale(100%); opacity: 0.7;`;
+            
+            const iconColor = isEarned ? color : '#6c757d';
+
+            return `
+                <div class="achievement-card text-center p-3 glass-card" style="min-width: 140px; ${cardStyle}">
+                    <div class="achievement-icon mb-2" style="font-size: 2rem; color: ${iconColor}">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <div class="fw-bold small mb-1 text-truncate" title="${name}">${name}</div>
+                    <div class="text-muted x-small text-truncate" style="font-size: 0.75rem;" title="${desc}">${desc}</div>
+                    ${!isEarned ? '<div class="mt-1"><i class="bi bi-lock-fill text-muted"></i></div>' : ''}
+                </div>
+            `;
+        }).join('');
+    };
+    
+    const renderStreak = (streakData) => {
+        const current = streakData.currentStreak ?? streakData.CurrentStreak ?? 0;
+        const longest = streakData.longestStreak ?? streakData.LongestStreak ?? 0;
+        const hasStudied = streakData.hasStudiedToday ?? streakData.HasStudiedToday ?? false;
+
+        setText('home-streak', `${current} Gün`);
+        setText('quick-stat-streak', current);
+        setText('home-xp-streak', current);
+        
+        const streakContainer = document.querySelector('.streak-badge');
+        if (streakContainer) {
+            if (hasStudied) {
+                streakContainer.classList.add('text-warning');
+                streakContainer.title = "Bugün çalıştın!";
+            } else {
+                streakContainer.classList.remove('text-warning');
+                streakContainer.title = "Bugün henüz çalışmadın.";
+            }
+        }
+    };
+
+    const renderStudentAnnouncements = (announcements) => {
+        const container = document.getElementById('student-announcements-container');
+        if (!container) return;
+        
+        if (!announcements || announcements.length === 0) {
+            container.innerHTML = `<div class="text-muted small">Henüz bir duyuru bulunmuyor.</div>`;
+            return;
+        }
+
+        container.innerHTML = announcements.map(a => {
+            const date = new Date(a.createdAt || a.CreatedAt).toLocaleDateString();
+            const teacherName = a.teacherName || a.TeacherName || 'Öğretmen';
+            return `
+                <div class="notification-item p-3 border rounded bg-white shadow-sm hover-elevate transition-all">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-info-circle me-1"></i> ${a.title || a.Title}</h6>
+                        <small class="text-muted" style="font-size: 0.7rem;">${date}</small>
+                    </div>
+                    <p class="mb-2 text-muted small">${a.message || a.Message}</p>
+                    <div class="text-end">
+                        <span class="badge bg-light text-dark"><i class="bi bi-person me-1"></i>${teacherName}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    const renderStudentHomeworks = (homeworks) => {
+        const container = document.getElementById('student-homeworks-container');
+        if (!container) return;
+        
+        if (!homeworks || homeworks.length === 0) {
+            container.innerHTML = `<div class="text-muted small">Şu an aktif bir ödeviniz bulunmuyor.</div>`;
+            return;
+        }
+
+        container.innerHTML = homeworks.map(h => {
+            const dueDate = new Date(h.dueDate || h.DueDate);
+            const now = new Date();
+            const dateStr = dueDate.toLocaleDateString();
+            const teacherName = h.teacherName || h.TeacherName || 'Öğretmen';
+            
+            let statusClass = "border-start border-4 border-warning";
+            let badgeHtml = `<span class="badge bg-warning text-dark px-2 py-1" style="font-size: 0.65rem;">Son Gün: ${dateStr}</span>`;
+            
+            if (dueDate < now) {
+                statusClass = "border-start border-4 border-danger";
+                badgeHtml = `<span class="badge bg-danger px-2 py-1" style="font-size: 0.65rem;">Gecikmiş (${dateStr})</span>`;
+            }
+
+            return `
+                <div class="notification-item p-3 rounded bg-white shadow-sm hover-elevate mb-2 ${statusClass}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 fw-bold text-dark">${h.subject || h.Subject} - ${h.topic || h.Topic}</h6>
+                        ${badgeHtml}
+                    </div>
+                    <p class="mb-2 text-muted small">${h.description || h.Description}</p>
+                    <div class="text-end">
+                        <span class="badge bg-light text-dark"><i class="bi bi-person me-1"></i>${teacherName}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    (async () => {
+        try {
+            setStatus('Yükleniyor...', 'bg-light text-dark');
+            
+            // 0. Otomatik Check-in (Günlük Giriş)
+            try {
+                await fetch('/Gamification/CheckIn', { method: 'POST' });
+            } catch (e) { 
+                console.error("Check-in error", e);
+            }
+
+            // 1. Leaderboard & XP
+            const pLeaderboard = fetchJson('/LeaderboardProxy/GetGeneralLeaderboard?limit=10')
+                .then(data => renderLeaderboard(data))
+                .catch(err => console.error('Leaderboard error', err));
+                
+            const pXp = fetchJson('/LeaderboardProxy/GetXpSummary')
+                .then(data => renderXp(data))
+                .catch(err => console.error('XP error', err));
+
+            // 3. Gamification API
+            const pStreak = fetchJson('/Gamification/StreakStatus')
+                .then(data => renderStreak(data))
+                .catch(err => {
+                    console.error('Streak error', err);
+                    setText('home-streak', '-'); 
+                });
+
+            const pAchievements = fetchJson('/Gamification/AllAchievements')
+               .then(data => renderAchievements(data))
+               .catch(err => {
+                   console.error('Achievements error', err);
+                   const c = document.getElementById('home-achievements-container');
+                   if(c) c.innerHTML = '<div class="text-danger small">Yüklenemedi</div>';
+               });
+
+            const pAnnouncements = fetchJson('/StudentPanelProxy/announcements')
+                .then(data => renderStudentAnnouncements(data))
+                .catch(err => {
+                    console.error('Announcements error', err);
+                    const c = document.getElementById('student-announcements-container');
+                    if (c) c.innerHTML = '<div class="text-danger small">Yüklenemedi</div>';
+                });
+                
+            const pHomeworks = fetchJson('/StudentPanelProxy/homeworks')
+                .then(data => renderStudentHomeworks(data))
+                .catch(err => {
+                    console.error('Homeworks error', err);
+                    const c = document.getElementById('student-homeworks-container');
+                    if (c) c.innerHTML = '<div class="text-danger small">Yüklenemedi</div>';
+                });
+
+            await Promise.all([pLeaderboard, pXp, pStreak, pAchievements, pAnnouncements, pHomeworks]);
+            
+            setStatus('Hazır', 'bg-success');
+        } catch (err) {
+            console.error('Genel dashboard hatası', err);
+            setStatus('Hata', 'bg-danger');
+        }
+    })();
+})();
+</script>
+}

@@ -1,0 +1,379 @@
+@{
+    ViewData["Title"] = "Program Hazırlama";
+}
+
+<div class="ai-detail-container">
+    <!-- Üst Başlık -->
+    <!-- Üst Başlık -->
+    <div class="modern-page-header header-ai mb-4">
+        <div class="modern-header-content">
+            <a asp-action="AIWork" asp-controller="Dashboard" class="btn btn-light rounded-circle shadow-sm me-3" style="width: 48px; height: 48px; display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-arrow-left text-primary"></i>
+            </a>
+            <div class="modern-header-icon">
+                <i class="bi bi-calendar-plus"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Program Oluştur</h1>
+                <p>Kişileştirilmiş AI destekli ders planı oluştur</p>
+            </div>
+        </div>
+        
+        <div class="modern-header-actions d-none d-lg-block">
+             <!-- Adım Rozetleri -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 p-2 bg-white rounded-pill px-3 shadow-sm">
+                    <span id="sb1" class="step-badge step-active">1</span>
+                    <span id="sl1" class="step-line d-none d-md-inline-block"></span>
+                    <span id="sb2" class="step-badge bg-light text-dark">2</span>
+                    <span id="sl2" class="step-line d-none d-md-inline-block"></span>
+                    <span id="sb3" class="step-badge bg-light text-dark">3</span>
+                    <span id="sl3" class="step-line d-none d-md-inline-block"></span>
+                    <span id="sb4" class="step-badge bg-light text-dark">4</span>
+                </div>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- ADIMLAR -->
+    <section id="step-1" class="mb-4">
+        <div class="section-cap cap-blue shadow-soft">
+            <h3 class="h5 mb-1">Haftalık Ders Planı</h3>
+            <p class="mb-0">Alabileceğin saatleri seç. Her gün için uygun saatleri işaretle.</p>
+        </div>
+        <div class="section-body shadow-soft">
+            <ul class="nav nav-pills flex-wrap gap-2 mb-3" id="dayTabs"></ul>
+            <div id="hoursGrid" class="d-flex flex-wrap gap-2"></div>
+            <div class="small text-muted mt-3"><span id="selHoursCount">0</span> saat seçildi.</div>
+        </div>
+    </section>
+
+    <section id="step-2" class="mb-4 d-none">
+        <div class="section-cap cap-orange shadow-soft">
+            <h3 class="h5 mb-1">Ders Seçimi</h3>
+            <p class="mb-0">Birden fazla ders seçebilirsin.</p>
+        </div>
+        <div class="section-body shadow-soft">
+            <div id="courseGrid" class="row g-3"></div>
+            <div class="small text-muted mt-3"><span id="selCourseCount">0</span> ders seçildi.</div>
+        </div>
+    </section>
+
+    <section id="step-3" class="mb-4 d-none">
+        <div class="section-cap cap-purple shadow-soft">
+            <h3 class="h5 mb-1">Konu Seçimi</h3>
+            <p class="mb-0">Her ders için almak istediğin konuları seç.</p>
+        </div>
+        <div class="section-body shadow-soft" id="topicsWrap"></div>
+    </section>
+
+    <section id="step-4" class="mb-5 d-none">
+        <div class="section-cap cap-green shadow-soft">
+            <h3 class="h5 mb-1">Özet</h3>
+            <p class="mb-0">Seçimlerinin genel görünümü</p>
+        </div>
+        <div class="section-body shadow-soft">
+            <div id="summary"></div>
+            <div class="mt-4 text-center">
+                <button id="btnGenerateAI" class="btn btn-primary btn-lg shadow-sm px-5">
+                    <i class="bi bi-robot me-2"></i> Programı Oluştur
+                </button>
+                <div id="aiFeedback" class="mt-3"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alt CTA -->
+    <div class="sticky-cta py-3 px-2 rounded-top-3 shadow-soft">
+        <div class="d-flex gap-2 justify-content-between align-items-center">
+            <button id="btnPrev" class="btn btn-outline-secondary px-4"><i class="bi bi-arrow-left me-1"></i> Geri</button>
+            <div class="text-muted small" id="stepHint">Adım 1/3</div>
+            <button id="btnNext" class="btn btn-success px-4">İleri <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+        const HOURS = Array.from({ length: 18 }, (_, i) => 6 + i);
+
+        // API'dan çekilecek ders listesi ve konuları tutacağımız obje
+        let ALL_COURSES = {};
+
+        // Varsayılan konu havuzu (API üzerinden henüz konu detayı gelmiyorsa fallback olarak kullanırız)
+        const FALLBACK_TOPICS = {
+            "Matematik": ["Fonksiyonlar", "Türev", "İntegral", "Limit", "Trigonometri", "Polinomlar", "Logaritma", "Diziler"],
+            "Türkçe": ["Anlam Bilgisi", "Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Dil Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri"],
+            "Fizik": ["Mekanik", "Elektrik", "Optik", "Termodinamik", "Modern Fizik", "Dalga Mekaniği"],
+            "Kimya": ["Modern Atom Teorisi", "Gazlar", "Sıvı Çözeltiler", "Kimyasal Tepkimelerde Enerji", "Organik Kimya"],
+            "Biyoloji": ["Hücre", "Canlıların Ortak Özellikleri", "Kalıtım", "Bitki Biyolojisi", "İnsan Fizyolojisi"],
+            "Tarih": ["İslamiyet Öncesi Türk Tarihi", "Osmanlı Devleti", "İnkılap Tarihi", "Çağdaş Türk ve Dünya Tarihi"],
+            "Coğrafya": ["Doğa ve İnsan", "Dünya'nın Şekli ve Hareketleri", "İklim", "Türkiye Coğrafyası"],
+            "Varsayılan": ["Konu 1", "Konu 2", "Konu 3", "Genel Tekrar", "Soru Çözümü", "Branş Denemesi", "Fasikül Çözümü"]
+        };
+
+        let currentStep = 1;
+        const hoursByDay = Object.fromEntries(DAYS.map(d => [d, []]));
+        const selectedCourses = new Set();
+        const topicsByCourse = {};
+        const subjectIds = {}; // Backend Subject ID eşleşmeleri
+        let activeDay = DAYS[0];
+
+        const dayTabs = document.getElementById('dayTabs');
+        const hoursGrid = document.getElementById('hoursGrid');
+        const selHoursCount = document.getElementById('selHoursCount');
+        const courseGrid = document.getElementById('courseGrid');
+        const selCourseCount = document.getElementById('selCourseCount');
+        const topicsWrap = document.getElementById('topicsWrap');
+        const summary = document.getElementById('summary');
+        const btnNext = document.getElementById('btnNext');
+        const btnPrev = document.getElementById('btnPrev');
+        const stepHint = document.getElementById('stepHint');
+        const sb1 = document.getElementById('sb1');
+        const sb2 = document.getElementById('sb2');
+        const sb3 = document.getElementById('sb3');
+        const sb4 = document.getElementById('sb4');
+        const sl1 = document.getElementById('sl1');
+        const sl2 = document.getElementById('sl2');
+        const sl3 = document.getElementById('sl3');
+        const sections = [null, 'step-1', 'step-2', 'step-3', 'step-4'];
+
+        function timeLabel(h) { return String(h).padStart(2, '0') + ":00"; }
+        function countAllHours() { return Object.values(hoursByDay).reduce((a, b) => a + b.length, 0); }
+
+        function renderDayTabs() {
+            dayTabs.innerHTML = '';
+            DAYS.forEach(d => {
+                const li = document.createElement('li'); li.className = 'nav-item';
+                const btn = document.createElement('button');
+                btn.className = 'nav-link ' + (d === activeDay ? 'active bg-success text-white' : '');
+                btn.style.borderRadius = '999px'; btn.textContent = d;
+                btn.onclick = () => { activeDay = d; renderDayTabs(); renderHours(); };
+                li.appendChild(btn); dayTabs.appendChild(li);
+            });
+        }
+        function renderHours() {
+            hoursGrid.innerHTML = '';
+            HOURS.forEach(h => {
+                const b = document.createElement('button');
+                b.className = 'btn btn-light';
+                if (hoursByDay[activeDay].includes(h)) b.classList.add('active');
+                b.textContent = timeLabel(h);
+                b.onclick = () => {
+                    const arr = hoursByDay[activeDay];
+                    const i = arr.indexOf(h);
+                    if (i >= 0) arr.splice(i, 1); else arr.push(h);
+                    arr.sort((a, b) => a - b);
+                    selHoursCount.textContent = countAllHours();
+                    renderHours(); validateNext();
+                };
+                hoursGrid.appendChild(b);
+            });
+            selHoursCount.textContent = countAllHours();
+        }
+
+        function renderCourses() {
+            courseGrid.innerHTML = '';
+            Object.keys(ALL_COURSES).forEach(name => {
+                const col = document.createElement('div'); col.className = 'col-12 col-sm-6 col-lg-4';
+                const card = document.createElement('div'); card.className = 'course-card h-100';
+                if (selectedCourses.has(name)) card.classList.add('active');
+                card.innerHTML = `<i class="bi bi-journal-bookmark fs-4 text-warning"></i><div class="fw-semibold">${name}</div>`;
+                card.onclick = () => {
+                    if (selectedCourses.has(name)) selectedCourses.delete(name);
+                    else selectedCourses.add(name);
+                    renderCourses(); renderTopics();
+                    selCourseCount.textContent = selectedCourses.size; validateNext();
+                };
+                col.appendChild(card); courseGrid.appendChild(col);
+            });
+            selCourseCount.textContent = selectedCourses.size;
+        }
+
+        function renderTopics() {
+            topicsWrap.innerHTML = '';
+            [...selectedCourses].forEach(course => {
+                const box = document.createElement('div'); box.className = 'mb-4';
+                box.innerHTML = `<div class="fw-bold mb-2">${course}</div>`;
+                const row = document.createElement('div'); row.className = 'd-flex flex-wrap gap-2';
+                (ALL_COURSES[course] || []).forEach(tp => {
+                    const b = document.createElement('button'); b.className = 'chip'; b.textContent = tp;
+                    const arr = topicsByCourse[course] || [];
+                    if (arr.includes(tp)) b.classList.add('selected');
+                    b.onclick = () => {
+                        const cur = topicsByCourse[course] || [];
+                        const i = cur.indexOf(tp);
+                        if (i >= 0) cur.splice(i, 1); else cur.push(tp);
+                        topicsByCourse[course] = cur; renderTopics(); validateNext();
+                    };
+                    row.appendChild(b);
+                });
+                box.appendChild(row); topicsWrap.appendChild(box);
+            });
+        }
+
+        function renderSummary() {
+            const hours = Object.entries(hoursByDay).filter(([, arr]) => arr.length)
+                .map(([d, arr]) => `<li><strong>${d}</strong>: ${arr.map(timeLabel).join(', ')}</li>`).join('');
+            const courses = [...selectedCourses].map(c => `<li><strong>${c}</strong>: ${(topicsByCourse[c] || []).join(', ') || ''}</li>`).join('');
+            summary.innerHTML = `<ul>${hours || '<li>Seçim yok</li>'}</ul><ul>${courses || '<li>Seçim yok</li>'}</ul>`;
+        }
+
+        function showStep(n) {
+            sections.forEach((id, idx) => { if (!id) return; document.getElementById(id).classList.toggle('d-none', idx !== n); });
+            currentStep = n;
+            if (sb1 && sb2 && sb3 && sb4) {
+                [sb1, sb2, sb3, sb4].forEach((el, i) => el.className = 'step-badge ' + (i + 1 <= n ? 'step-active' : 'bg-light text-dark'));
+            }
+            if (sl1 && sl2 && sl3) {
+                [sl1, sl2, sl3].forEach((el, i) => el.style.background = (i + 1 < n ? '#22c55e' : 'rgba(255,255,255,.4)'));
+            }
+            stepHint.textContent = n <= 3 ? `Adım ${n}/3` : 'Bitti';
+            btnPrev.disabled = (n === 1);
+            btnNext.textContent = (n === 3 ? 'Bitir' : n === 4 ? 'Yeniden Başla' : 'İleri ');
+            validateNext();
+            if (n === 4) renderSummary();
+        }
+
+        function validateNext() {
+            let ok = false;
+            if (currentStep === 1) ok = countAllHours() > 0;
+            if (currentStep === 2) ok = selectedCourses.size > 0;
+            if (currentStep === 3) ok = [...selectedCourses].every(c => (topicsByCourse[c] || []).length > 0);
+            if (currentStep === 4) ok = true;
+            btnNext.disabled = !ok;
+        }
+
+        btnNext.onclick = () => {
+            if (currentStep === 3) { showStep(4); return; }
+            if (currentStep === 4) { showStep(1); return; }
+            showStep(currentStep + 1);
+        };
+        btnPrev.onclick = () => showStep(Math.max(1, currentStep - 1));
+
+        const btnGenerateAI = document.getElementById('btnGenerateAI');
+        const aiFeedback = document.getElementById('aiFeedback');
+
+        btnGenerateAI.onclick = async () => {
+            btnGenerateAI.disabled = true;
+            aiFeedback.innerHTML = `
+                <div class="d-flex flex-column align-items-center gap-2 py-3">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="text-muted fw-bold">
+                        <i class="bi bi-robot me-1"></i> AI programınızı hazırlıyor, lütfen bekleyin...
+                    </div>
+                </div>`;
+
+            const weeklyAvailability = [];
+            Object.entries(hoursByDay).forEach(([dayName, hours]) => {
+                if(hours.length > 0) {
+                    const dayIdx = (DAYS.indexOf(dayName) + 1) % 7;
+                    weeklyAvailability.push({
+                        DayOfWeek: dayIdx,
+                        TimeSlots: hours.sort((a,b)=>a-b).map(h => String(h).padStart(2, '0') + ":00")
+                    });
+                }
+            });
+
+            const subjectPreferences = [];
+            selectedCourses.forEach(c => {
+                subjectPreferences.push({
+                    SubjectId: subjectIds[c] || 0,
+                    SubjectName: c,
+                    SelectedTopics: topicsByCourse[c] || []
+                });
+            });
+
+            const payload = {
+                TargetWeeklyHours: countAllHours(),
+                WeeklyAvailability: weeklyAvailability,
+                SubjectPreferences: subjectPreferences,
+                ExamType: "TYT",
+                WeakTopics: []
+            };
+
+            try {
+                // Tek fetch: AI üret + Pomodoro'ya kaydet
+                const res = await fetch('/api/StudyScheduleProxy/GenerateAndSave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    const saved = result.saved || result.Saved || 0;
+
+                    aiFeedback.innerHTML = `
+                        <div class="text-success fw-bold fs-5">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            ${saved > 0 ? saved + ' etüt takvime eklendi!' : 'Program oluşturuldu!'}
+                        </div>
+                        <div class="text-muted small mt-1">Takvim sayfasına yönlendiriliyorsunuz...</div>`;
+
+                    setTimeout(() => {
+                        window.location.href = '/Dashboard/Schedule';
+                    }, 2000);
+
+                } else {
+                    const text = await res.text();
+                    throw new Error(text);
+                }
+            } catch(e) {
+                console.error(e);
+                aiFeedback.innerHTML = `
+                    <div class="text-danger fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Hata: ${e.message}
+                    </div>`;
+                btnGenerateAI.disabled = false;
+            }
+        };
+
+        // Arka uçtan dinamik ders listesini çek ve Fallback topics ekle
+        async function initSubjects() {
+            try {
+                // Dersleri backend'in Subject API'sinden Exam Controller aracılığıyla alıyoruz
+                const res = await fetch('/Exam/Subjects');
+                if(res.ok) {
+                    const subjects = await res.json();
+                    
+                    if(subjects && subjects.length > 0) {
+                        ALL_COURSES = {};
+                        
+                        subjects.forEach(s => {
+                            const name = s.Name || s.name;
+                            const id = s.Id || s.id;
+                            
+                            // Genellikle API ders adları için FallbackTopic eşleşen isim bul
+                            let matchedKey = "Varsayılan";
+                            for (const key of Object.keys(FALLBACK_TOPICS)) {
+                                if (name.toLowerCase().includes(key.toLowerCase())) {
+                                    matchedKey = key;
+                                    break;
+                                }
+                            }
+
+                            ALL_COURSES[name] = FALLBACK_TOPICS[matchedKey];
+                            subjectIds[name] = id;
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("Dersler backend'den alınırken hata oluştu, varsayılanlar yükleniyor.", err);
+                // Bir sorun olursa basit fallback
+                ALL_COURSES = {
+                    "Türkçe": FALLBACK_TOPICS["Türkçe"],
+                    "Matematik": FALLBACK_TOPICS["Matematik"],
+                    "Fizik": FALLBACK_TOPICS["Fizik"],
+                    "Kimya": FALLBACK_TOPICS["Kimya"]
+                };
+            }
+
+            renderDayTabs(); renderHours(); renderCourses(); renderTopics(); showStep(1);
+        }
+
+        initSubjects();
+    </script>
+}

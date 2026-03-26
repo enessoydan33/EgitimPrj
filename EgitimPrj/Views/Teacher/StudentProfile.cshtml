@@ -1,0 +1,663 @@
+@{
+    ViewData["Title"] = "Öğrenci Profili";
+    var studentId = (int)(ViewData["StudentId"] ?? 0);
+}
+
+<div class="student-profile-container fade-in-up mt-5">
+
+    <!-- ===== HEADER ===== -->
+    <div class="modern-page-header header-profile">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1 id="profile-student-name">Öğrenci Profili</h1>
+                <p id="profile-student-class">Yükleniyor...</p>
+            </div>
+        </div>
+        <div class="modern-header-actions">
+            <a asp-action="TeacherExam" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Geri Dön
+            </a>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- ===== PROFIL ÖZETİ ===== -->
+    <div class="profile-summary-card mb-4">
+        <div class="profile-avatar-large" id="profile-avatar">
+            <span id="profile-initials">?</span>
+        </div>
+        <div class="profile-info-col">
+            <h2 class="profile-full-name" id="profile-full-name">-</h2>
+            <div class="profile-badges">
+                <span class="profile-badge badge-class" id="profile-class-badge">
+                    <i class="bi bi-mortarboard-fill me-1"></i><span id="profile-class-text">-</span>
+                </span>
+                <span class="profile-badge badge-rank" id="profile-rank-badge">
+                    <i class="bi bi-trophy-fill me-1"></i>Sıra: <span id="profile-rank-text">-</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== İSTATİSTİK KARTLARI ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="profile-stat-card stat-total">
+                <div class="profile-stat-icon"><i class="bi bi-clipboard-check"></i></div>
+                <div class="profile-stat-info">
+                    <div class="profile-stat-value" id="stat-total-exam">-</div>
+                    <div class="profile-stat-label">Toplam Deneme</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="profile-stat-card stat-avg">
+                <div class="profile-stat-icon"><i class="bi bi-graph-up"></i></div>
+                <div class="profile-stat-info">
+                    <div class="profile-stat-value" id="stat-avg-net">-</div>
+                    <div class="profile-stat-label">Ortalama Net</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="profile-stat-card stat-best">
+                <div class="profile-stat-icon"><i class="bi bi-trophy"></i></div>
+                <div class="profile-stat-info">
+                    <div class="profile-stat-value" id="stat-best-net">-</div>
+                    <div class="profile-stat-label">En İyi Net</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="profile-stat-card stat-change">
+                <div class="profile-stat-icon"><i class="bi bi-arrow-up-circle"></i></div>
+                <div class="profile-stat-info">
+                    <div class="profile-stat-value" id="stat-change">-</div>
+                    <div class="profile-stat-label">Son Değişim</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TYT / AYT GEÇİŞ ===== -->
+    <div class="d-flex justify-content-center mb-4">
+        <div class="view-toggle-container">
+            <button class="view-toggle-btn active" data-mode="tyt" onclick="switchExamType('tyt')">
+                <i class="bi bi-mortarboard-fill me-1"></i>TYT
+            </button>
+            <button class="view-toggle-btn" data-mode="ayt" onclick="switchExamType('ayt')">
+                <i class="bi bi-award-fill me-1"></i>AYT
+            </button>
+        </div>
+    </div>
+
+
+
+    <!-- ===== PERFORMANS GRAFİĞİ ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="icon-box icon-box-profile">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Performans Grafiği</h5>
+                        <p class="text-muted small mb-0">Son denemelerdeki toplam net değişimi</p>
+                    </div>
+                </div>
+                <div class="chart-container" id="performance-chart">
+                    <div class="text-center text-muted py-4">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SON DENEMELER ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="icon-box icon-box-profile">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Son Denemeler</h5>
+                        <p class="text-muted small mb-0">Kronolojik sırada deneme geçmişi</p>
+                    </div>
+                </div>
+                <div id="exam-history-container">
+                    <div class="text-center text-muted py-4">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== Sınav Detayı Modal ===== -->
+<div class="modal fade" id="examDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white p-4 border-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="examDetailTitle">Deneme Detayı</h5>
+                        <p class="mb-0 text-white-50 small" id="examDetailSubtitle">Yükleniyor...</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div id="examDetailContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Yükleniyor...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Deneme detayları getiriliyor...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 bg-white">
+                <button type="button" class="btn btn-secondary px-4 py-2 fw-bold" style="border-radius: 10px;" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    /* ===== ANİMASYON ===== */
+    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    @@keyframes fadeInUp {
+        from { opacity:0; transform:translateY(20px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ===== HEADER ===== */
+    .header-profile { background:linear-gradient(135deg,#059669 0%,#10b981 100%); }
+
+    /* ===== PROFİL ÖZET KARTI ===== */
+    .profile-summary-card {
+        background:#fff; border-radius:24px;
+        border:1px solid rgba(226,232,240,.8);
+        box-shadow:0 10px 30px rgba(0,0,0,.03);
+        padding:2rem 2.5rem;
+        display:flex; align-items:center; gap:1.5rem;
+        transition:transform .3s,box-shadow .3s;
+    }
+    .profile-summary-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,.06); }
+    .profile-avatar-large {
+        width:80px; height:80px; border-radius:50%;
+        background:linear-gradient(135deg,#059669,#34d399);
+        color:#fff; font-size:1.8rem; font-weight:800;
+        display:flex; align-items:center; justify-content:center;
+        flex-shrink:0;
+        box-shadow:0 8px 24px rgba(5,150,105,.25);
+    }
+    .profile-full-name { font-weight:800; color:#1e293b; font-size:1.6rem; margin-bottom:.5rem; }
+    .profile-badges { display:flex; gap:.6rem; flex-wrap:wrap; }
+    .profile-badge {
+        display:inline-flex; align-items:center;
+        padding:.4rem .85rem; border-radius:10px;
+        font-size:.82rem; font-weight:700;
+    }
+    .badge-class { background:#ecfdf5; color:#059669; }
+    .badge-rank  { background:#eff6ff; color:#2563eb; }
+
+    /* ===== STAT KARTLARI ===== */
+    .profile-stat-card {
+        background:#fff; border-radius:20px;
+        border:1px solid rgba(226,232,240,.8);
+        padding:1.1rem 1.25rem;
+        display:flex; align-items:center; gap:.9rem;
+        box-shadow:0 4px 15px rgba(0,0,0,.03);
+        transition:transform .3s,box-shadow .3s;
+    }
+    .profile-stat-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.07); }
+    .profile-stat-icon {
+        width:50px; height:50px; border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:1.35rem; flex-shrink:0;
+    }
+    .stat-total .profile-stat-icon { background:#e0e7ff; color:#4f46e5; }
+    .stat-avg   .profile-stat-icon { background:#fef9c3; color:#ca8a04; }
+    .stat-best  .profile-stat-icon { background:#dcfce7; color:#16a34a; }
+    .stat-change .profile-stat-icon { background:#fee2e2; color:#dc2626; }
+    .profile-stat-value { font-size:1.6rem; font-weight:800; color:#1e293b; line-height:1; }
+    .profile-stat-label { font-size:.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
+
+    /* ===== GLASS CARD ===== */
+    .glass-card {
+        background:#fff; border-radius:24px;
+        border:1px solid rgba(226,232,240,.8);
+        box-shadow:0 10px 30px rgba(0,0,0,.03);
+        transition:transform .3s,box-shadow .3s;
+    }
+    .glass-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,.06); }
+
+    .icon-box-profile {
+        width:44px; height:44px; background:#ecfdf5; color:#059669;
+        border-radius:12px; display:flex; align-items:center;
+        justify-content:center; font-size:1.1rem; flex-shrink:0;
+    }
+
+    /* ===== DERS ANALİZ KARTLARI ===== */
+    .subject-card {
+        background:#f8fafc; border-radius:16px;
+        border:1px solid #e2e8f0; padding:1.1rem 1.25rem;
+        transition:all .25s;
+    }
+    .subject-card:hover { background:#f1f5f9; transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.05); }
+    .subject-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
+    .subject-card-name { font-weight:700; font-size:.9rem; }
+    .subject-card-net { font-weight:800; font-size:1.15rem; }
+    .subject-progress-bar {
+        width:100%; height:8px; background:#e2e8f0;
+        border-radius:6px; overflow:hidden;
+    }
+    .subject-progress-fill {
+        height:100%; border-radius:6px;
+        transition:width .6s ease;
+    }
+
+    /* ===== TOGGLE BUTTONS ===== */
+    .view-toggle-container {
+        display:inline-flex; background:#f1f5f9;
+        border-radius:14px; padding:4px; gap:4px;
+    }
+    .view-toggle-btn {
+        border:none; background:transparent;
+        padding:.55rem 1.6rem; border-radius:10px;
+        font-size:.9rem; font-weight:700; color:#64748b;
+        cursor:pointer; transition:all .25s;
+    }
+    .view-toggle-btn.active {
+        background:#fff; color:#059669;
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+    .view-toggle-btn:hover:not(.active) { color:#1e293b; }
+
+    /* ===== PERFORMANS GRAFİĞİ ===== */
+    .chart-container { min-height:200px; }
+    .bar-chart {
+        display:flex; align-items:flex-end; gap:8px;
+        height:200px; padding:0 4px;
+    }
+    .bar-item {
+        flex:1; display:flex; flex-direction:column;
+        align-items:center; gap:4px; min-width:0;
+    }
+    .bar-fill {
+        width:100%; border-radius:8px 8px 4px 4px;
+        transition:height .6s ease;
+        min-height:4px; max-width:60px;
+    }
+    .bar-label {
+        font-size:.68rem; color:#94a3b8;
+        font-weight:600; text-align:center;
+        white-space:nowrap; overflow:hidden;
+        text-overflow:ellipsis; max-width:60px;
+    }
+    .bar-value {
+        font-size:.72rem; font-weight:700; color:#1e293b;
+    }
+
+    /* ===== DENEME GEÇMİŞİ ===== */
+    .exam-history-item {
+        display:flex; align-items:center; gap:1rem;
+        padding:1rem 1.25rem; background:#f8fafc;
+        border-radius:14px; border:1px solid #e2e8f0;
+        margin-bottom:.6rem; transition:all .2s;
+    }
+    .exam-history-item:hover { background:#f1f5f9; transform:translateX(4px); }
+    .exam-history-icon {
+        width:42px; height:42px; border-radius:12px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:1rem; flex-shrink:0;
+    }
+    .exam-history-icon.tyt { background:#e0e7ff; color:#4f46e5; }
+    .exam-history-icon.ayt { background:#dcfce7; color:#16a34a; }
+    .exam-history-info { flex:1; min-width:0; }
+    .exam-history-name { font-weight:700; color:#1e293b; font-size:.9rem; }
+    .exam-history-date { font-size:.78rem; color:#94a3b8; }
+    .exam-history-net {
+        font-weight:800; font-size:1.1rem;
+        padding:.3rem .8rem; border-radius:10px;
+    }
+    .net-high   { background:rgba(22,163,74,.12); color:#16a34a; }
+    .net-medium { background:rgba(202,138,4,.12); color:#ca8a04; }
+    .net-low    { background:rgba(220,38,38,.12); color:#dc2626; }
+</style>
+}
+
+@section Scripts {
+<script>
+const studentId = @studentId;
+const classroomId = parseInt(new URLSearchParams(window.location.search).get('classroomId')) || 0;
+let currentType = 'tyt';
+let student = null;
+let exams = [];
+let examStats = null;
+
+async function apiGet(url) {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+async function loadStudentProfile() {
+    try {
+        // Sınıf adı ve öğrenci performansı
+        const classrooms = await apiGet('/TeacherPanelProxy/Classrooms');
+        const classroom = (Array.isArray(classrooms) ? classrooms : []).find(c => c.id === classroomId);
+        const className = classroom?.name || `Sınıf #${classroomId}`;
+
+        const performances = await apiGet(`/TeacherPanelProxy/ClassroomPerformances?classroomId=${encodeURIComponent(classroomId)}`);
+        const perf = (Array.isArray(performances) ? performances : []).find(p => p.studentId === studentId);
+
+        if (!perf) {
+            document.querySelector('.student-profile-container').innerHTML =
+                `<div class="text-center py-5"><h3 class="text-muted">Öğrenci bulunamadı</h3>
+                 <a href="/Teacher/TeacherExam" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
+            return;
+        }
+
+        student = {
+            id: perf.studentId,
+            name: perf.studentName,
+            cls: className,
+            averageNet: perf.averageNetScore || 0,
+            totalExams: perf.totalTrialExams || 0
+        };
+
+        // Deneme listesi
+        try {
+            const trialRes = await apiGet(`/TeacherPanelProxy/StudentTrialExams?classroomId=${encodeURIComponent(classroomId)}&studentId=${encodeURIComponent(studentId)}`);
+            // API genelde TrialExamListResponse döndürüyor: { trials: [...], stats: {...} }
+            const trials = trialRes?.trials ?? trialRes?.Trials ?? trialRes;
+            exams = Array.isArray(trials) ? trials : [];
+            examStats = trialRes?.stats ?? trialRes?.Stats ?? null;
+        } catch {
+            exams = [];
+            examStats = null;
+        }
+
+        renderHeader();
+        renderStats();
+        renderChart();
+        renderExamHistory();
+
+    } catch (err) {
+        console.error('Profil yüklenemedi', err);
+        document.querySelector('.student-profile-container').innerHTML =
+            `<div class="text-center py-5"><h3 class="text-muted">Profil yüklenemedi</h3>
+             <a href="/Teacher/TeacherExam" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
+    }
+}
+
+function renderHeader() {
+    const initials = (student.name || '').split(' ').map(w => w[0]).join('').toUpperCase();
+    document.getElementById('profile-student-name').textContent = `${student.name} (ID: ${student.id})`;
+    document.getElementById('profile-student-class').textContent = `Sınıf: ${student.cls}`;
+    document.getElementById('profile-initials').textContent = initials || '?';
+    document.getElementById('profile-full-name').textContent = `${student.name} (ID: ${student.id})`;
+    document.getElementById('profile-class-text').textContent = student.cls;
+    const avatar = document.getElementById('profile-avatar');
+    avatar.textContent = '';
+    avatar.innerHTML = `<span>${initials || '?'}</span>`;
+}
+
+function renderStats() {
+    // Önce API'nin stats bilgisini kullan, yoksa eldeki denemelerden hesapla
+    const totalCount =
+        examStats?.totalTrials ?? examStats?.TotalTrials ?? exams.length ?? student.totalExams ?? 0;
+
+    const avg =
+        examStats?.averageNet ?? examStats?.AverageNet ??
+        (typeof student.averageNet === 'number' ? student.averageNet : 0);
+
+    const best =
+        examStats?.highestNet ?? examStats?.HighestNet ??
+        (typeof student.averageNet === 'number' ? student.averageNet : 0);
+
+    const lastChange =
+        examStats?.lastChange ?? examStats?.LastChange ?? null;
+
+    const change = (typeof lastChange === 'number')
+        ? ((lastChange >= 0 ? '+' : '') + lastChange.toFixed(1))
+        : '-';
+
+    document.getElementById('stat-total-exam').textContent = totalCount;
+    document.getElementById('stat-avg-net').textContent = avg ? avg.toFixed(1) : '-';
+    document.getElementById('stat-best-net').textContent = best ? best.toFixed(1) : '-';
+    document.getElementById('stat-change').textContent = change;
+}
+
+function getExamType(e) {
+    return (e?.examType ?? e?.ExamType ?? e?.type ?? e?.Type ?? 'TYT').toString().toUpperCase();
+}
+function getExamTotalNet(e) {
+    const v = e?.totalNet ?? e?.TotalNet ?? e?.totalNetScore ?? e?.TotalNetScore ?? e?.net ?? e?.Net ?? 0;
+    return typeof v === 'number' ? v : Number(v) || 0;
+}
+function getExamDate(e) {
+    return e?.examDate ?? e?.ExamDate ?? e?.date ?? e?.Date ?? null;
+}
+function getExamName(e) {
+    return e?.name ?? e?.Name ?? e?.examName ?? e?.ExamName ?? 'Deneme';
+}
+
+function renderChart() {
+    const container = document.getElementById('performance-chart');
+    const filtered = exams.filter(e => {
+        const type = getExamType(e).toLowerCase();
+        return currentType === 'tyt' ? type === 'tyt' : type === 'ayt';
+    });
+
+    if (!filtered.length) {
+        container.innerHTML = `<div class="text-center text-muted py-4">
+            <i class="bi bi-bar-chart fs-1 d-block mb-2 opacity-50"></i>
+            <p>Bu tür için henüz deneme bulunmuyor.</p></div>`;
+        return;
+    }
+
+    const totals = filtered.map(e => getExamTotalNet(e));
+    const maxVal = Math.max(...totals, 1);
+
+    container.innerHTML = `
+    <div class="bar-chart">
+        ${filtered.map((e, i) => {
+            const total = totals[i];
+            const height = Math.max(4, (total / maxVal) * 180);
+            const color = currentType === 'tyt'
+                ? 'linear-gradient(180deg,#4f46e5,#818cf8)'
+                : 'linear-gradient(180deg,#059669,#34d399)';
+            const rawDate = getExamDate(e);
+            const dateShort = rawDate
+                ? new Date(rawDate).toLocaleDateString('tr-TR', { day:'numeric', month:'short' })
+                : '';
+            const name = getExamName(e);
+            return `
+            <div class="bar-item">
+                <div class="bar-value">${Number(total).toFixed(1)}</div>
+                <div class="bar-fill" style="height:${height}px;background:${color};"></div>
+                <div class="bar-label" title="${name}">${dateShort}</div>
+            </div>`;
+        }).join('')}
+    </div>`;
+}
+
+function renderExamHistory() {
+    const container = document.getElementById('exam-history-container');
+    if (!exams.length) {
+        container.innerHTML = `<div class="text-center text-muted py-4">Henüz deneme kaydı yok.</div>`;
+        return;
+    }
+
+    const ordered = [...exams].sort((a,b) => {
+        const da = new Date(getExamDate(a) ?? 0).getTime();
+        const db = new Date(getExamDate(b) ?? 0).getTime();
+        return db - da;
+    });
+
+    container.innerHTML = ordered.map(e => {
+        const typeStr = getExamType(e);
+        const typeClass = typeStr === 'TYT' ? 'tyt' : 'ayt';
+        const total = getExamTotalNet(e);
+        const netClass = total >= 75 ? 'net-high' : total >= 50 ? 'net-medium' : 'net-low';
+        const rawDate = getExamDate(e);
+        const dateStr = rawDate
+            ? new Date(rawDate).toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' })
+            : '';
+        const name = getExamName(e);
+        const trialId = e?.id ?? e?.Id;
+        return `
+        <div class="exam-history-item" style="cursor: pointer;" onclick="showExamDetail(${trialId})">
+            <div class="exam-history-icon ${typeClass}">
+                <i class="bi bi-${typeClass === 'tyt' ? 'mortarboard-fill' : 'award-fill'}"></i>
+            </div>
+            <div class="exam-history-info">
+                <div class="exam-history-name">${name}</div>
+                <div class="exam-history-date">${dateStr} · ${typeStr}</div>
+            </div>
+            <div class="exam-history-net ${netClass}">${Number(total).toFixed(1)}</div>
+            <div class="ms-2 text-muted">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function switchExamType(type) {
+    currentType = type;
+    document.querySelectorAll('.view-toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === type);
+    });
+    renderStats();
+    renderChart();
+
+}
+
+
+
+let examDetailModalInstance = null;
+async function showExamDetail(trialId) {
+    if (!trialId) return;
+    
+    // Modalı göster ve yükleniyor durumuna al
+    if (!examDetailModalInstance) {
+        examDetailModalInstance = new bootstrap.Modal(document.getElementById('examDetailModal'));
+    }
+    document.getElementById('examDetailContent').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3 text-muted">Deneme detayları getiriliyor...</p>
+        </div>`;
+    document.getElementById('examDetailTitle').textContent = "Deneme Detayı";
+    document.getElementById('examDetailSubtitle').textContent = "Yükleniyor...";
+    examDetailModalInstance.show();
+
+    try {
+        const url = `/TeacherPanelProxy/StudentTrialExamDetail?classroomId=${encodeURIComponent(classroomId)}&studentId=${encodeURIComponent(studentId)}&trialId=${encodeURIComponent(trialId)}`;
+        const detail = await apiGet(url);
+
+        const typeStr = getExamType(detail);
+        const name = getExamName(detail);
+        const dateStr = getExamDate(detail) ? new Date(getExamDate(detail)).toLocaleDateString('tr-TR') : '';
+        const rawTotalNet = detail.totalNetScore ?? detail.TotalNetScore ?? detail.totalNet ?? 0;
+        const totalNet = Number(rawTotalNet).toFixed(1);
+
+        document.getElementById('examDetailTitle').textContent = name;
+        document.getElementById('examDetailSubtitle').textContent = `${typeStr} · ${dateStr} · Toplam: ${totalNet} Net`;
+
+        // Ders detayları (subject scores)
+        const subjects = detail.subjectScores ?? detail.SubjectScores ?? [];
+        
+        let html = '';
+        if (subjects.length === 0) {
+            html = `<div class="text-center p-4 text-muted"><i class="bi bi-info-circle fs-2 d-block mb-2"></i>Ders bazlı detay bulunamadı.</div>`;
+        } else {
+            html = `<div class="table-responsive bg-white rounded-3 shadow-sm">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="py-3 px-4 border-0 rounded-start">Ders</th>
+                            <th class="py-3 px-3 border-0 text-center"><span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1"><i class="bi bi-check-circle me-1"></i>Doğru</span></th>
+                            <th class="py-3 px-3 border-0 text-center"><span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1"><i class="bi bi-x-circle me-1"></i>Yanlış</span></th>
+                            <th class="py-3 px-3 border-0 text-center"><span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-1"><i class="bi bi-dash-circle me-1"></i>Boş</span></th>
+                            <th class="py-3 px-4 border-0 text-end rounded-end text-primary fw-bold">Net</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">`;
+            
+            let sumC = 0, sumW = 0, sumB = 0, sumN = 0;
+            subjects.forEach(s => {
+                const sName = s.subjectName ?? s.SubjectName ?? 'Ders';
+                const c = s.correctAnswers ?? s.CorrectAnswers ?? 0;
+                const w = s.wrongAnswers ?? s.WrongAnswers ?? 0;
+                
+                // API boş sayılarını dönmüyorsa (emptyAnswers) 4 yanlış 1 doğru hesaplamasına göre tahmini soru sayısından bul. 
+                // Ya da API'dan `emptyAnswers` geliyorsa al.
+                const eAns = s.emptyAnswers ?? s.EmptyAnswers;
+                let b = 0;
+                if (eAns !== undefined) {
+                     b = eAns;
+                } else {
+                     // Genelde API'de EmptyAnswers özelliği var ancak modele eklenmemiş olabilir. 
+                     // C# dto'da "EmptyAnswers" olarak tanımlı, veriyi güvenli şekilde deniyoruz
+                     b = s.emptyAnswers ?? s.EmptyAnswers ?? 0;
+                }
+                
+                const n = s.netScore ?? s.NetScore ?? 0;
+
+                sumC += c;
+                sumW += w;
+                sumB += b;
+                sumN += n;
+                
+                html += `
+                    <tr>
+                        <td class="py-3 px-4 fw-bold text-dark">${sName}</td>
+                        <td class="py-3 px-3 text-center fw-medium text-success">${c}</td>
+                        <td class="py-3 px-3 text-center fw-medium text-danger">${w}</td>
+                        <td class="py-3 px-3 text-center fw-medium text-secondary">${b}</td>
+                        <td class="py-3 px-4 text-end fw-bold fs-5 text-primary">${Number(n).toFixed(2)}</td>
+                    </tr>`;
+            });
+            
+            // Generate Total Row
+            html += `
+                    <tr class="table-light border-top">
+                        <td class="py-3 px-4 fw-bolder text-dark">Toplam</td>
+                        <td class="py-3 px-3 text-center fw-bolder text-success">${sumC}</td>
+                        <td class="py-3 px-3 text-center fw-bolder text-danger">${sumW}</td>
+                        <td class="py-3 px-3 text-center fw-bolder text-secondary">${sumB}</td>
+                        <td class="py-3 px-4 text-end fw-bold fs-4 text-primary">${Number(sumN).toFixed(2)}</td>
+                    </tr>
+            `;
+
+            html += `</tbody></table></div>`;
+        }
+        document.getElementById('examDetailContent').innerHTML = html;
+
+    } catch (err) {
+        console.error('Deneme detayı yüklenemedi', err);
+        document.getElementById('examDetailContent').innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
+                <p class="text-danger fw-bold">Detaylar yüklenirken bir hata oluştu.</p>
+                <button class="btn btn-outline-primary btn-sm mt-2" onclick="showExamDetail(${trialId})"><i class="bi bi-arrow-clockwise me-1"></i>Tekrar Dene</button>
+            </div>`;
+    }
+}
+
+loadStudentProfile();
+</script>
+}

@@ -1,0 +1,668 @@
+@{
+    ViewData["Title"] = "Başarı Tahmini";
+}
+
+<style>
+    .tahmin-container { max-width: 1100px; margin: 0 auto; }
+
+    /* ─── Tab Sistemi ─── */
+    .sinav-tabs { display: flex; gap: 12px; margin-bottom: 28px; }
+    .sinav-tab-btn {
+        flex: 1; padding: 14px 24px;
+        border: 2px solid var(--border-color, #e2e8f0);
+        border-radius: 14px; background: var(--card-bg, #fff);
+        cursor: pointer; font-size: 1rem; font-weight: 600;
+        color: var(--text-secondary, #64748b); transition: all 0.25s;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .sinav-tab-btn.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff; border-color: transparent;
+        box-shadow: 0 6px 20px rgba(102,126,234,0.35);
+    }
+    .sinav-tab-btn:hover:not(.active) { border-color: #667eea; color: #667eea; transform: translateY(-1px); }
+
+    /* ─── Otomatik Yükleme Banner ─── */
+    .auto-load-banner {
+        display: flex; align-items: center; justify-content: space-between;
+        background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.05));
+        border: 1.5px solid rgba(102,126,234,0.3); border-radius: 14px;
+        padding: 14px 20px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+    }
+    .auto-load-left { display: flex; align-items: center; gap: 12px; }
+    .auto-load-ikon { font-size: 1.6rem; }
+    .auto-load-metin strong { color: var(--text-primary, #1e293b); font-size: 0.95rem; display: block; }
+    .auto-load-metin span { color: var(--text-secondary, #64748b); font-size: 0.8rem; }
+    .auto-load-btn {
+        padding: 9px 20px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white; border: none; border-radius: 10px;
+        font-size: 0.875rem; font-weight: 600; cursor: pointer;
+        white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .auto-load-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(102,126,234,0.4); }
+    .auto-load-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    /* ─── Eşleşen deneme rozeti ─── */
+    .donem-card {
+        background: var(--card-bg, #fff);
+        border: 2px solid var(--border-color, #e2e8f0);
+        border-radius: 14px; padding: 18px; transition: all 0.2s; position: relative;
+    }
+    .donem-card:hover { border-color: #667eea; box-shadow: 0 4px 16px rgba(102,126,234,0.15); }
+    .donem-card.girildi { border-color: #10b981; background: linear-gradient(135deg, rgba(16,185,129,0.05), transparent); }
+    .donem-card.otomatik { border-color: #667eea; background: linear-gradient(135deg, rgba(102,126,234,0.06), transparent); }
+
+    .eslesme-rozet {
+        position: absolute; top: -9px; right: 12px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white; font-size: 0.65rem; font-weight: 700;
+        padding: 2px 10px; border-radius: 20px; letter-spacing: 0.04em;
+    }
+
+    .donem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .donem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .donem-baslik { font-size: 0.875rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+    .donem-tarih { font-size: 0.75rem; color: var(--text-secondary, #64748b); background: var(--bg-secondary, #f1f5f9); padding: 3px 8px; border-radius: 6px; }
+    .net-input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .net-label { font-size: 0.72rem; font-weight: 600; color: var(--text-secondary, #64748b); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .net-input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border-color, #e2e8f0); border-radius: 8px; font-size: 0.9rem; font-weight: 600; background: var(--input-bg, #f8fafc); color: var(--text-primary, #1e293b); transition: border-color 0.2s, box-shadow 0.2s; }
+    .net-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+    .net-input::placeholder { color: #cbd5e1; }
+
+    .tahmin-btn {
+        width: 100%; padding: 16px 32px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white; border: none; border-radius: 14px;
+        font-size: 1.05rem; font-weight: 700; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        transition: all 0.25s; margin-bottom: 28px;
+        box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+    }
+    .tahmin-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(102,126,234,0.45); }
+    .tahmin-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+    /* Sonuçlar */
+    .sonuc-section { display: none; animation: fadeSlideIn 0.5s ease; }
+    .sonuc-section.goster { display: block; }
+    @@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .sonuc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .sonuc-kart { background: var(--card-bg, #fff); border-radius: 14px; padding: 20px 16px; text-align: center; border: 2px solid var(--border-color, #e2e8f0); box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s; }
+    .sonuc-kart:hover { transform: translateY(-2px); }
+    .sonuc-kart.ana-kart { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; box-shadow: 0 8px 24px rgba(102,126,234,0.4); grid-column: span 2; }
+    .sonuc-ikon { font-size: 1.8rem; margin-bottom: 8px; }
+    .sonuc-deger { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .sonuc-etiket { font-size: 0.78rem; font-weight: 600; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.04em; }
+    .sonuc-kart:not(.ana-kart) .sonuc-deger { color: #667eea; }
+    .sonuc-kart:not(.ana-kart) .sonuc-etiket { color: var(--text-secondary, #64748b); }
+
+    .yontem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .yontem-kart { background: var(--card-bg, #fff); border-radius: 14px; padding: 20px; border: 2px solid var(--border-color, #e2e8f0); }
+    .yontem-baslik { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary, #64748b); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .yontem-satir { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color, #f1f5f9); }
+    .yontem-satir:last-child { border-bottom: none; }
+    .yontem-ders { font-size: 0.875rem; color: var(--text-secondary, #64748b); }
+    .yontem-net { font-size: 0.95rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+
+    .benzer-kart { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03)); border: 2px solid #10b981; border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+    .benzer-ikon { font-size: 2.5rem; flex-shrink: 0; }
+    .benzer-baslik { font-weight: 700; color: #10b981; margin-bottom: 4px; }
+    .benzer-text { font-size: 0.875rem; color: var(--text-secondary, #64748b); }
+
+    .info-box { background: rgba(102,126,234,0.08); border: 1.5px solid rgba(102,126,234,0.3); border-radius: 12px; padding: 14px 18px; font-size: 0.875rem; color: #667eea; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+    .hata-box { background: rgba(239,68,68,0.08); border: 1.5px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 14px 18px; font-size: 0.875rem; color: #ef4444; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; display: none; }
+
+    .loading-spinner { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 40px; color: var(--text-secondary, #64748b); }
+    .spinner-ring { width: 48px; height: 48px; border: 4px solid rgba(102,126,234,0.2); border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+
+    .temizle-btn { background: none; border: 2px solid var(--border-color, #e2e8f0); border-radius: 10px; padding: 8px 18px; font-size: 0.85rem; color: var(--text-secondary, #64748b); cursor: pointer; transition: all 0.2s; margin-bottom: 20px; display: none; }
+    .temizle-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    @@media (max-width: 640px) {
+        .net-input-group { grid-template-columns: 1fr; }
+        .yontem-grid { grid-template-columns: 1fr; }
+        .sonuc-kart.ana-kart { grid-column: span 1; }
+    }
+</style>
+
+<div class="tahmin-container">
+    <!-- Başlık -->
+    <div class="modern-page-header header-ai mb-4">
+        <div class="modern-header-content">
+            <a asp-action="AIWork" asp-controller="Dashboard" class="btn btn-light rounded-circle shadow-sm me-3"
+               style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-arrow-left text-primary"></i>
+            </a>
+            <div class="modern-header-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Deneme Net Tahmini</h1>
+                <p>Makine öğrenmesi ile sınava kadar beklenen net tahminlerinizi görün</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- Sınav Tipi Seçimi -->
+    <div class="sinav-tabs">
+        <button class="sinav-tab-btn active" id="btnTyt" onclick="sinavaGec('TYT')">
+            <i class="bi bi-pencil-square"></i> TYT
+        </button>
+        <button class="sinav-tab-btn" id="btnSayisal" onclick="sinavaGec('Sayisal')">
+            <i class="bi bi-calculator"></i> AYT Sayısal
+        </button>
+    </div>
+
+    <!-- Otomatik Yükleme Banner -->
+    <div class="auto-load-banner">
+        <div class="auto-load-left">
+            <div class="auto-load-ikon">🔄</div>
+            <div class="auto-load-metin">
+                <strong>Denemelerinizden Otomatik Doldur</strong>
+                <span id="autoLoadDurum">Kayıtlı deneme sonuçlarınız otomatik yüklenecek</span>
+            </div>
+        </div>
+        <button class="auto-load-btn" id="autoLoadBtn" onclick="denemeleriYukle()">
+            <i class="bi bi-cloud-download"></i> Verileri Yükle
+        </button>
+    </div>
+
+    <!-- Hata Kutusu -->
+    <div class="hata-box" id="hataBox">
+        <i class="bi bi-exclamation-triangle-fill" style="flex-shrink:0;margin-top:1px;"></i>
+        <div id="hataMetin"></div>
+    </div>
+
+    <!-- Bilgi Kutusu -->
+    <div class="info-box" id="bilgiBox" style="display:none;">
+        <i class="bi bi-info-circle-fill" style="flex-shrink:0;margin-top:1px;"></i>
+        <div id="bilgiMetin"></div>
+    </div>
+
+    <!-- TYT Dönemler -->
+    <div id="tytPaneli">
+        <div class="donem-grid" id="tytDonemler"></div>
+    </div>
+
+    <!-- AYT Sayısal Dönemler -->
+    <div id="sayisalPaneli" style="display:none;">
+        <div class="donem-grid" id="sayisalDonemler"></div>
+    </div>
+
+    <!-- Sınav Tarihi -->
+    <div class="detail-card mb-3" style="padding:16px 20px;">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <label class="fw-bold mb-0" for="sinavTarihi" style="white-space:nowrap;">
+                <i class="bi bi-calendar-event text-primary me-1"></i> Sınav Tarihi:
+            </label>
+            <input type="text" id="sinavTarihi" class="net-input" value="21.06.2026"
+                   placeholder="GG.AA.YYYY" style="max-width:160px;" />
+            <span style="font-size:0.8rem;color:var(--text-secondary,#64748b);">GG.AA.YYYY formatında</span>
+        </div>
+    </div>
+
+    <!-- Tahmin Et Butonu -->
+    <button class="tahmin-btn" id="tahminBtn" onclick="tahminEt()">
+        <i class="bi bi-cpu"></i> Tahmini Hesapla
+    </button>
+
+    <!-- Yükleniyor -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-ring"></div>
+        <span>ML modeli hesaplıyor...</span>
+    </div>
+
+    <!-- Temizle -->
+    <button class="temizle-btn" id="temizleBtn" onclick="temizle()">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Sonuçları Temizle
+    </button>
+
+    <!-- Sonuçlar -->
+    <div class="sonuc-section" id="sonucSection">
+        <div class="detail-card mb-3">
+            <h3 class="card-section-title"><i class="bi bi-stars"></i> Tahmin Özeti</h3>
+            <div class="sonuc-grid" id="sonucGrid"></div>
+        </div>
+
+        <div class="benzer-kart" id="benzerSection" style="display:none;">
+            <div class="benzer-ikon">👥</div>
+            <div>
+                <div class="benzer-baslik" id="benzerBaslik"></div>
+                <div class="benzer-text" id="benzerText"></div>
+            </div>
+        </div>
+
+        <div class="detail-card mb-3" id="yontemSection" style="display:none;">
+            <h3 class="card-section-title"><i class="bi bi-bar-chart-line"></i> Yöntem Karşılaştırması</h3>
+            <div class="yontem-grid" id="yontemGrid"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    // ──────────────────────────────────────────────────────
+    // Dönem tanımları — tarih sıralaması için kullanılır
+    // ──────────────────────────────────────────────────────
+    const DONEMLER = [
+        { id: 1,  ad: 'D.1 — Eylül 2025',    tarih: '12.09.2025', ts: new Date(2025,8,12).getTime()  },
+        { id: 7,  ad: 'D.7 — Ekim-Kasım',    tarih: '31.10.2025', ts: new Date(2025,9,31).getTime()  },
+        { id: 15, ad: 'D.15 — Şubat 2026',   tarih: '07.02.2026', ts: new Date(2026,1,7).getTime()   },
+        { id: 18, ad: 'D.18 — Mart 2026',    tarih: '06.03.2026', ts: new Date(2026,2,6).getTime()   },
+        { id: 21, ad: 'D.21 — Nisan 2026',   tarih: '17.04.2026', ts: new Date(2026,3,17).getTime()  },
+    ];
+
+    const TYT_DERSLER = [
+        { key: 'turkce',    label: 'Türkçe',   max: 40, esles: ['türkçe','turkce','turk'] },
+        { key: 'matematik', label: 'Matematik', max: 40, esles: ['matematik','math','mat'] },
+        { key: 'fen',       label: 'Fen',       max: 20, esles: ['fen','fizik','kimya','biyoloji','science'] },
+        { key: 'sosyal',    label: 'Sosyal',    max: 20, esles: ['sosyal','tarih','coğrafya','felsefe','din','social'] },
+    ];
+
+    const SAY_DERSLER = [
+        { key: 'matematik', label: 'Matematik', max: 40, esles: ['matematik','math','mat'] },
+        { key: 'fen',       label: 'Fen',       max: 40, esles: ['fen','fizik','kimya','biyoloji'] },
+    ];
+
+    let mevcutSinav = 'TYT';
+
+    // ──────────────────────────────────────────────────────
+    // Dönem kart oluşturma
+    // ──────────────────────────────────────────────────────
+    function donemKartlariOlustur(konteyner, dersler) {
+        const grid = document.getElementById(konteyner);
+        grid.innerHTML = '';
+        DONEMLER.forEach(d => {
+            const inputs = dersler.map(ders => `
+                <div>
+                    <div class="net-label">${ders.label}</div>
+                    <input class="net-input" type="number"
+                           id="${konteyner}_${d.id}_${ders.key}"
+                           placeholder="0–${ders.max}"
+                           min="-10" max="${ders.max}" step="0.5"
+                           oninput="kartGuncelle('${konteyner}', ${d.id})">
+                </div>`).join('');
+
+            grid.insertAdjacentHTML('beforeend', `
+                <div class="donem-card" id="kart_${konteyner}_${d.id}">
+                    <div class="donem-header">
+                        <span class="donem-baslik">${d.ad}</span>
+                        <span class="donem-tarih">${d.tarih}</span>
+                    </div>
+                    <div class="net-input-group">${inputs}</div>
+                </div>`);
+        });
+    }
+
+    window.kartGuncelle = function(konteyner, donemId) {
+        const kart = document.getElementById(`kart_${konteyner}_${donemId}`);
+        if (!kart) return;
+        const inputs = kart.querySelectorAll('.net-input');
+        const dolu = Array.from(inputs).some(i => i.value.trim() !== '');
+        kart.classList.toggle('girildi', dolu);
+    };
+
+    // ──────────────────────────────────────────────────────
+    // Ders adını ML anahtarına eşleme
+    // ──────────────────────────────────────────────────────
+    function dersEsle(subjectName, dersler) {
+        const lower = (subjectName || '').toLowerCase().replace(/\s+/g, '');
+        for (const d of dersler) {
+            if (d.esles.some(e => lower.includes(e))) return d.key;
+        }
+        return null;
+    }
+
+    // ──────────────────────────────────────────────────────
+    // Tarihe göre en yakın dönemi bul
+    // ──────────────────────────────────────────────────────
+    function enYakinDonem(tarihTs) {
+        let enYakin = DONEMLER[0];
+        let enKucukFark = Math.abs(tarihTs - DONEMLER[0].ts);
+        for (const d of DONEMLER) {
+            const fark = Math.abs(tarihTs - d.ts);
+            if (fark < enKucukFark) { enKucukFark = fark; enYakin = d; }
+        }
+        return enYakin;
+    }
+
+    // ──────────────────────────────────────────────────────
+    // API'den denemeleri çek ve formu doldur
+    // ──────────────────────────────────────────────────────
+    window.denemeleriYukle = async function() {
+        const btn = document.getElementById('autoLoadBtn');
+        const durum = document.getElementById('autoLoadDurum');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Yükleniyor...';
+        durum.textContent = 'Deneme verileri çekiliyor...';
+        hataGizle();
+        bilgiGizle();
+
+        try {
+            // Tüm denemelerin listesini çek (summary)
+            const listResp = await fetch('/Exam/List');
+            if (!listResp.ok) throw new Error(`HTTP ${listResp.status}`);
+            const listData = await listResp.json();
+
+            const trials = listData?.trials || listData?.Trials || listData || [];
+            if (!Array.isArray(trials) || trials.length === 0) {
+                durum.textContent = 'Henüz kayıtlı deneme bulunamadı.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-download"></i> Verileri Yükle';
+                return;
+            }
+
+            // Seçili sınav türüne göre filtrele
+            const sinav = mevcutSinav === 'TYT' ? 'TYT' : 'AYT';
+            const dersler = mevcutSinav === 'TYT' ? TYT_DERSLER : SAY_DERSLER;
+            const konteyner = mevcutSinav === 'TYT' ? 'tytDonemler' : 'sayisalDonemler';
+
+            const filtrelenmis = trials.filter(t => {
+                const tip = (t.examType || t.ExamType || '').toString().toUpperCase().trim();
+                return tip === sinav || tip === '' || tip === 'KARMA';
+            });
+
+            if (filtrelenmis.length === 0) {
+                durum.textContent = `${sinav} türünde kayıtlı deneme bulunamadı.`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-download"></i> Verileri Yükle';
+                return;
+            }
+
+            // Her deneme için detail çek (SubjectScores için)
+            const detailPromises = filtrelenmis.map(t => {
+                const id = t.id || t.Id;
+                return fetch(`/Exam/Detail/${id}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .catch(() => null);
+            });
+
+            const detaylar = await Promise.all(detailPromises);
+
+            // Inputları sıfırla
+            DONEMLER.forEach(d => {
+                dersler.forEach(ders => {
+                    const el = document.getElementById(`${konteyner}_${d.id}_${ders.key}`);
+                    if (el) { el.value = ''; el.classList.remove('otomatik'); }
+                });
+                const kart = document.getElementById(`kart_${konteyner}_${d.id}`);
+                if (kart) {
+                    kart.classList.remove('girildi', 'otomatik');
+                    const rozet = kart.querySelector('.eslesme-rozet');
+                    if (rozet) rozet.remove();
+                }
+            });
+
+            let doldurulan = 0;
+
+            detaylar.forEach((detay, i) => {
+                if (!detay) return;
+                const scores = detay.subjectScores || detay.SubjectScores || [];
+                if (!scores.length) return;
+
+                const examDate = new Date(detay.examDate || detay.ExamDate || filtrelenmis[i].examDate || filtrelenmis[i].ExamDate);
+                if (isNaN(examDate.getTime())) return;
+
+                const donem = enYakinDonem(examDate.getTime());
+
+                scores.forEach(score => {
+                    const subName = score.subjectName || score.SubjectName || '';
+                    const net = parseFloat(score.netScore ?? score.NetScore ?? 0);
+                    const dersKey = dersEsle(subName, dersler);
+                    if (!dersKey) return;
+
+                    const el = document.getElementById(`${konteyner}_${donem.id}_${dersKey}`);
+                    if (el) {
+                        el.value = net.toFixed(1);
+                        el.classList.add('otomatik');
+                    }
+                });
+
+                // Kartı işaretle
+                const kart = document.getElementById(`kart_${konteyner}_${donem.id}`);
+                if (kart) {
+                    kart.classList.add('girildi', 'otomatik');
+                    if (!kart.querySelector('.eslesme-rozet')) {
+                        const name = detay.name || detay.Name || `Deneme ${i + 1}`;
+                        kart.insertAdjacentHTML('beforeend',
+                            `<div class="eslesme-rozet">📌 ${name.length > 20 ? name.slice(0,18) + '…' : name}</div>`);
+                    }
+                }
+
+                doldurulan++;
+            });
+
+            if (doldurulan > 0) {
+                durum.textContent = `${doldurulan} deneme kaydı otomatik yüklendi. İstediğiniz değerleri düzenleyebilirsiniz.`;
+                bilgiGoster(`<strong>${doldurulan} deneme</strong> verisi otomatik yüklendi. Değerleri dilediğiniz gibi düzenleyebilir, ardından <strong>Tahmini Hesapla</strong> butonuna tıklayabilirsiniz.`);
+            } else {
+                durum.textContent = 'Ders verileri eşleştirilemedi. Lütfen manuel girin.';
+            }
+
+        } catch (e) {
+            console.error(e);
+            hataGoster('Deneme verileri yüklenirken hata oluştu: ' + e.message);
+            durum.textContent = 'Yükleme başarısız.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-download"></i> Yenile';
+        }
+    };
+
+    // ──────────────────────────────────────────────────────
+    // Sınav tipi geçişi
+    // ──────────────────────────────────────────────────────
+    window.sinavaGec = function (tip) {
+        mevcutSinav = tip;
+        document.getElementById('btnTyt').classList.toggle('active', tip === 'TYT');
+        document.getElementById('btnSayisal').classList.toggle('active', tip === 'Sayisal');
+        document.getElementById('tytPaneli').style.display     = tip === 'TYT'     ? '' : 'none';
+        document.getElementById('sayisalPaneli').style.display = tip === 'Sayisal' ? '' : 'none';
+        gizleSonuc();
+        // Tab değişince otomatik yeniden yükle
+        denemeleriYukle();
+    };
+
+    // ──────────────────────────────────────────────────────
+    // Form verisi toplama
+    // ──────────────────────────────────────────────────────
+    function veriTopla() {
+        const isTYT     = mevcutSinav === 'TYT';
+        const konteyner = isTYT ? 'tytDonemler' : 'sayisalDonemler';
+        const dersler   = isTYT
+            ? TYT_DERSLER.map(d => d.key)
+            : SAY_DERSLER.map(d => d.key);
+
+        const denemeler = {};
+        DONEMLER.forEach(d => {
+            const netler = {};
+            let herhangi = false;
+            dersler.forEach(dersKey => {
+                const el = document.getElementById(`${konteyner}_${d.id}_${dersKey}`);
+                if (el && el.value.trim() !== '') {
+                    netler[dersKey] = parseFloat(el.value);
+                    herhangi = true;
+                }
+            });
+            if (herhangi) {
+                dersler.forEach(dersKey => { if (netler[dersKey] === undefined) netler[dersKey] = 0; });
+                denemeler[d.id] = netler;
+            }
+        });
+        return denemeler;
+    }
+
+    // ──────────────────────────────────────────────────────
+    // ML Tahmin isteği
+    // ──────────────────────────────────────────────────────
+    window.tahminEt = async function () {
+        hataGizle();
+        const denemeler   = veriTopla();
+        const sinavTarihi = document.getElementById('sinavTarihi').value.trim();
+
+        if (Object.keys(denemeler).length === 0) {
+            hataGoster('En az 1 dönem için net değeri girmelisiniz.');
+            return;
+        }
+
+        const endpoint = mevcutSinav === 'TYT'
+            ? '/MlPrediction/TytTahmin'
+            : '/MlPrediction/SayisalTahmin';
+
+        gosterLoading(true);
+
+        try {
+            const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ denemeler, sinav_tarihi: sinavTarihi })
+            });
+            const json = await resp.json();
+            if (!resp.ok) { hataGoster(json.message ?? `Sunucu hatası (${resp.status})`); return; }
+            sonuclariGoster(json, mevcutSinav);
+        } catch (e) {
+            hataGoster("ML servisine ulaşılamadı. Python API'nin çalıştığından emin olun.");
+        } finally {
+            gosterLoading(false);
+        }
+    };
+
+    // ──────────────────────────────────────────────────────
+    // Sonuç gösterimi
+    // ──────────────────────────────────────────────────────
+    function sonuclariGoster(apiResp, sinav) {
+        const data  = apiResp.data ?? apiResp;
+        const ort   = data.ortalama_tahmin;
+        const trend = data.trend_tahmin;
+        const ml    = data.ml_tahmin;
+        const benzer = data.benzer_ogrenci_analizi;
+        const isTYT = sinav === 'TYT';
+
+        const grid = document.getElementById('sonucGrid');
+        grid.innerHTML = '';
+
+        if (ort) {
+            const kartlar = isTYT
+                ? [
+                    { ikon:'📖', deger:fmt(ort.turkce),   etiket:'Türkçe'    },
+                    { ikon:'🔢', deger:fmt(ort.matematik), etiket:'Matematik' },
+                    { ikon:'🔬', deger:fmt(ort.fen),       etiket:'Fen'       },
+                    { ikon:'🌍', deger:fmt(ort.sosyal),    etiket:'Sosyal'    },
+                  ]
+                : [
+                    { ikon:'🔢', deger:fmt(ort.matematik), etiket:'Matematik' },
+                    { ikon:'🔬', deger:fmt(ort.fen),       etiket:'Fen'       },
+                  ];
+
+            kartlar.forEach(k => grid.insertAdjacentHTML('beforeend', `
+                <div class="sonuc-kart">
+                    <div class="sonuc-ikon">${k.ikon}</div>
+                    <div class="sonuc-deger">${k.deger}</div>
+                    <div class="sonuc-etiket">${k.etiket}</div>
+                </div>`));
+
+            grid.insertAdjacentHTML('beforeend', `
+                <div class="sonuc-kart ana-kart">
+                    <div class="sonuc-ikon">🎯</div>
+                    <div class="sonuc-deger" style="font-size:2.8rem;">${fmt(ort.toplam)}</div>
+                    <div class="sonuc-etiket" style="opacity:0.85;">Tahmini Toplam Net</div>
+                </div>`);
+        }
+
+        // Benzer öğrenci
+        const benzerSec = document.getElementById('benzerSection');
+        if (benzer) {
+            document.getElementById('benzerBaslik').textContent = `${benzer.benzer_sayisi} benzer öğrenci bulundu`;
+            let txt = '';
+            if (benzer.son_sinav_ortalama != null) txt += `Son deneme ortalaması: ${fmt(benzer.son_sinav_ortalama)} net. `;
+            if (benzer.ortalama_gelisim   != null) {
+                const art = benzer.ortalama_gelisim;
+                txt += art >= 0
+                    ? `Bu öğrenciler ortalama ${fmt(art)} net artış yapmıştır. 🚀`
+                    : `Bu öğrencilerde ortalama ${fmt(Math.abs(art))} net düşüş gözlemlenmiştir.`;
+            }
+            document.getElementById('benzerText').textContent = txt;
+            benzerSec.style.display = '';
+        } else {
+            benzerSec.style.display = 'none';
+        }
+
+        // Yöntem karşılaştırması
+        const yontemSec  = document.getElementById('yontemSection');
+        const yontemGrid = document.getElementById('yontemGrid');
+        if (trend || ml) {
+            yontemGrid.innerHTML = '';
+            const dersler = isTYT
+                ? [['turkce','Türkçe'],['matematik','Matematik'],['fen','Fen'],['sosyal','Sosyal'],['toplam','Toplam']]
+                : [['matematik','Matematik'],['fen','Fen'],['toplam','Toplam']];
+
+            if (trend) {
+                yontemGrid.insertAdjacentHTML('beforeend', `
+                    <div class="yontem-kart">
+                        <div class="yontem-baslik"><i class="bi bi-graph-up me-1" style="color:#667eea;"></i>Trend Analizi</div>
+                        ${dersler.map(([k,a]) => `<div class="yontem-satir"><span class="yontem-ders">${a}</span><span class="yontem-net">${fmt(trend[k])}</span></div>`).join('')}
+                    </div>`);
+            }
+            if (ml) {
+                yontemGrid.insertAdjacentHTML('beforeend', `
+                    <div class="yontem-kart">
+                        <div class="yontem-baslik"><i class="bi bi-cpu me-1" style="color:#10b981;"></i>ML Modeli</div>
+                        ${dersler.map(([k,a]) => `<div class="yontem-satir"><span class="yontem-ders">${a}</span><span class="yontem-net">${fmt(ml[k])}</span></div>`).join('')}
+                    </div>`);
+            }
+            yontemSec.style.display = '';
+        } else {
+            yontemSec.style.display = 'none';
+        }
+
+        document.getElementById('sonucSection').classList.add('goster');
+        document.getElementById('temizleBtn').style.display = '';
+        document.getElementById('sonucSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ──────────────────────────────────────────────────────
+    // Yardımcılar
+    // ──────────────────────────────────────────────────────
+    function fmt(val) { return val == null ? '—' : parseFloat(val).toFixed(1); }
+
+    function hataGoster(msg) {
+        document.getElementById('hataMetin').textContent = msg;
+        document.getElementById('hataBox').style.display = 'flex';
+    }
+    function hataGizle() { document.getElementById('hataBox').style.display = 'none'; }
+
+    function bilgiGoster(html) {
+        document.getElementById('bilgiMetin').innerHTML = html;
+        document.getElementById('bilgiBox').style.display = 'flex';
+    }
+    function bilgiGizle() { document.getElementById('bilgiBox').style.display = 'none'; }
+
+    function gosterLoading(durum) {
+        document.getElementById('loadingSpinner').style.display = durum ? 'flex' : 'none';
+        document.getElementById('tahminBtn').disabled = durum;
+    }
+
+    function gizleSonuc() {
+        document.getElementById('sonucSection').classList.remove('goster');
+        document.getElementById('temizleBtn').style.display = 'none';
+        hataGizle();
+    }
+
+    window.temizle = function () { gizleSonuc(); };
+
+    // ──────────────────────────────────────────────────────
+    // İlk yükleme
+    // ──────────────────────────────────────────────────────
+    donemKartlariOlustur('tytDonemler',     TYT_DERSLER);
+    donemKartlariOlustur('sayisalDonemler', SAY_DERSLER);
+
+    // Sayfa açıldığında otomatik yükle
+    denemeleriYukle();
+
+})();
+</script>
+}

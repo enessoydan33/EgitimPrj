@@ -1,0 +1,261 @@
+@{
+    ViewData["Title"] = "Yapay Zeka ile Çalışma";
+}
+
+<div class="ai-work-container">
+    <!-- Başlık Bölümü -->
+    <!-- Başlık Bölümü -->
+    <div class="modern-page-header header-ai">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-robot"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Yapay Zeka ile Çalışma</h1>
+                <p>Kişiselleştirilmiş öğrenme deneyimi için AI destekli çalışma</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- AI Özellikleri -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 col-md-6">
+            <div class="ai-feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h3>AI Program Hazırlama</h3>
+                <p>Yapay zeka ile kişiselleştirilmiş çalışma programları oluşturun. Hedeflerinize göre optimize edilmiş planlar.</p>
+                <div class="feature-badge">
+                    <span class="badge bg-primary">Aktif</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="ai-feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-clipboard-data"></i>
+                </div>
+                <h3>Deneme Analizi</h3>
+                <p>Detaylı deneme sınavı analizi ile güçlü ve zayıf yönlerinizi belirleyin. AI destekli performans raporları.</p>
+                <div class="feature-badge">
+                    <span class="badge bg-success">Yeni</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="ai-feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h3>Başarı Tahmini</h3>
+                <p>Kaç saat çalışırsanız başarılı olacağınızı AI ile öğrenin. Kişiselleştirilmiş çalışma süresi önerileri.</p>
+                <div class="feature-badge">
+                    <span class="badge bg-warning">Beta</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Çalışma Alanları -->
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="ai-work-area clickable-card" onclick="location.href='@Url.Action("AIProgramHazirlama", "Dashboard")'">
+                <h3 class="work-area-title">
+                    <i class="bi bi-calendar-plus"></i>
+                    AI Program Hazırlama
+                </h3>
+                <div class="program-generator">
+                    <div class="program-preview">
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-calendar-week text-primary"></i>
+                                <span class="fw-semibold">Haftalık Ders Planı</span>
+                            </div>
+                            <p class="text-muted small mb-0">Günler ve saatler seçin</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-journal-bookmark text-warning"></i>
+                                <span class="fw-semibold">Ders Seçimi</span>
+                            </div>
+                            <p class="text-muted small mb-0">Çalışmak istediğiniz dersleri seçin</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-list-check text-success"></i>
+                                <span class="fw-semibold">Konu Seçimi</span>
+                            </div>
+                            <p class="text-muted small mb-0">Her ders için konuları belirleyin</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-file-text text-info"></i>
+                                <span class="fw-semibold">Özet</span>
+                            </div>
+                            <p class="text-muted small mb-0">Seçimlerinizin genel görünümü</p>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-arrow-right-circle"></i> Program Oluşturmaya Başla
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="ai-work-area clickable-card" onclick="location.href='@Url.Action("DenemeAnalizi", "Dashboard")'">
+                <h3 class="work-area-title">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Deneme Analizi
+                </h3>
+                <div class="exam-analysis">
+                    <div class="analysis-summary">
+                        <div class="analysis-item">
+                            <div class="analysis-icon">
+                                <i class="bi bi-trophy"></i>
+                            </div>
+                            <div class="analysis-content">
+                                <h5>Son Deneme Skoru</h5>
+                                <p class="score">425/500</p>
+                                <span class="trend up">+15 puan</span>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-item">
+                            <div class="analysis-icon">
+                                <i class="bi bi-target"></i>
+                            </div>
+                            <div class="analysis-content">
+                                <h5>Güçlü Alanlar</h5>
+                                <p>Matematik, Türkçe</p>
+                                <div class="strength-bars">
+                                    <div class="strength-bar math">%92</div>
+                                    <div class="strength-bar turkish">%88</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-item">
+                            <div class="analysis-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="analysis-content">
+                                <h5>Gelişim Alanları</h5>
+                                <p>Fizik, Kimya</p>
+                                <div class="improvement-bars">
+                                    <div class="improvement-bar physics">%45</div>
+                                    <div class="improvement-bar chemistry">%52</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="ai-work-area clickable-card" onclick="location.href='@Url.Action("BasariTahmini", "Dashboard")'">
+                <h3 class="work-area-title">
+                    <i class="bi bi-clock-history"></i>
+                    Başarı Tahmini
+                </h3>
+                <div class="success-prediction">
+                    <div class="prediction-chart">
+                        <div class="chart-header">
+                            <h5>Çalışma Saati vs Başarı Oranı</h5>
+                        </div>
+                        <div class="chart-bars">
+                            <div class="chart-bar">
+                                <div class="bar-label">2 saat/gün</div>
+                                <div class="bar-fill" style="height: 35%"></div>
+                                <div class="bar-value">%35</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">3 saat/gün</div>
+                                <div class="bar-fill" style="height: 55%"></div>
+                                <div class="bar-value">%55</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">4 saat/gün</div>
+                                <div class="bar-fill" style="height: 75%"></div>
+                                <div class="bar-value">%75</div>
+                            </div>
+                            <div class="chart-bar">
+                                <div class="bar-label">5+ saat/gün</div>
+                                <div class="bar-fill" style="height: 90%"></div>
+                                <div class="bar-value">%90</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="prediction-insight">
+                        <div class="insight-card">
+                            <i class="bi bi-lightbulb"></i>
+                            <p>AI önerisi: Günlük 4 saat çalışarak %75 başarı oranına ulaşabilirsiniz!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI İstatistikleri -->
+    <div class="row mt-5">
+        <div class="ai-stats-section">
+                <h3 class="stats-title">AI Analiz Raporu</h3>
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="ai-stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">8</h4>
+                                <p class="stat-label">Oluşturulan Program</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="ai-stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-clipboard-data"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">24</h4>
+                                <p class="stat-label">Deneme Analizi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="ai-stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">75%</h4>
+                                <p class="stat-label">Başarı Tahmini</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="ai-stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h4 class="stat-number">4.2</h4>
+                                <p class="stat-label">Önerilen Saat/Gün</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>

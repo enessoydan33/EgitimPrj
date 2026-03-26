@@ -1,0 +1,680 @@
+@{
+    ViewData["Title"] = "Dersler";
+}
+
+<div class="lessons-container">
+    <!-- Başlık Bölümü -->
+    
+    <!-- Başlık Bölümü -->
+    <div class="modern-page-header header-lessons">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-book"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Dersler</h1>
+                <p>Kapsamlı ders içerikleri ve interaktif öğrenme materyalleri</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+    
+    <!-- Basit istatistik bandı (kısa tut) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="study-stat-card total-stat d-flex align-items-center justify-content-between">
+                <div>
+                    <p class="stat-label mb-1">Toplam Ders</p>
+                    <h4 class="stat-number mb-0">0</h4>
+                </div>
+                <i class="bi bi-collection stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="study-stat-card weekly-stat d-flex align-items-center justify-content-between">
+                <div>
+                    <p class="stat-label mb-1">Aktif Dersler</p>
+                    <h4 class="stat-number mb-0">0</h4>
+                </div>
+                <i class="bi bi-hourglass-split stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="study-stat-card streak-stat d-flex align-items-center justify-content-between">
+                <div class="w-100">
+                    <p class="stat-label mb-2">XP Özeti</p>
+                    <div id="xp-summary-display">
+                        <div class="text-muted small">Yükleniyor...</div>
+                    </div>
+                </div>
+                <i class="bi bi-trophy stat-icon text-warning"></i>
+            </div>
+        </div>
+    </div>
+
+    @* Ajax istekleri için AntiForgeryToken (Pomodoro Start/Cancel/Complete) *@
+    <div style="display:none">
+        @Html.AntiForgeryToken()
+    </div>
+
+    <!-- Mobil benzeri Pomodoro Sayacı -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="pomodoro-mobile-card">
+                <div class="pomodoro-mobile-top">
+                    <a asp-action="Index" asp-controller="Dashboard" class="pomodoro-back-btn" aria-label="Geri">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div class="pomodoro-mobile-title">Çalışma</div>
+                    <div class="pomodoro-cycle-badge" id="pomodoro-cycle-badge">
+                        <i class="bi bi-fire"></i>
+                        <span id="pomodoro-cycle-text">1/8</span>
+                    </div>
+                </div>
+
+                <div class="pomodoro-subject-select-wrap">
+                    <label class="form-label small text-muted mb-1">Ders Seç</label>
+                    <select class="form-select" id="pomodoro-subject-select">
+                        <option value="">Ders seçiniz...</option>
+                    </select>
+                </div>
+
+                <div class="pomodoro-timer-ring" role="img" aria-label="Pomodoro sayaç">
+                    <div class="pomodoro-timer-inner">
+                        <div class="pomodoro-timer-icon">
+                            <i class="bi bi-mortarboard"></i>
+                        </div>
+                        <div class="pomodoro-timer-time" id="pomodoro-countdown">25:00</div>
+                    </div>
+                </div>
+
+                <div class="pomodoro-controls">
+                    <button class="btn pomodoro-btn-start" id="pomodoro-btn-start" type="button">
+                        <i class="bi bi-play-fill"></i>
+                        Başla
+                    </button>
+                    <button class="btn pomodoro-btn-stop" id="pomodoro-btn-stop" type="button" disabled>
+                        <i class="bi bi-stop-fill"></i>
+                        Durdur
+                    </button>
+                </div>
+
+                <div class="pomodoro-summary">
+                    <div class="pomodoro-summary-item">
+                        <div class="pomodoro-summary-icon green"><i class="bi bi-stopwatch"></i></div>
+                        <div class="pomodoro-summary-value" id="pomodoro-summary-count">0</div>
+                        <div class="pomodoro-summary-label">Pomodoro</div>
+                    </div>
+                    <div class="pomodoro-summary-item">
+                        <div class="pomodoro-summary-icon blue"><i class="bi bi-clock"></i></div>
+                        <div class="pomodoro-summary-value" id="pomodoro-summary-study">0s 25dk</div>
+                        <div class="pomodoro-summary-label">Çalışma</div>
+                    </div>
+                    <div class="pomodoro-summary-item">
+                        <div class="pomodoro-summary-icon orange"><i class="bi bi-star-fill"></i></div>
+                        <div class="pomodoro-summary-value" id="pomodoro-summary-xp">0</div>
+                        <div class="pomodoro-summary-label">XP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aktif Dersler -->
+    <div class="row mb-5">
+        <div class="active-lessons-section">
+                <h3 class="section-title">
+                    <i class="bi bi-play-circle"></i>
+                    Aktif Dersler
+                </h3>
+                <div class="row g-4">
+                    <!-- Dersler JavaScript ile dinamik olarak yüklenecek -->
+                    <div class="col-12">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Dersler yükleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+// Çalışma Sayacı Fonksiyonları - Pomodoro API Entegrasyonu
+let activePomodoro = null;
+let subjects = [];
+let todayScheduleItems = []; // Bugünkü programdaki tüm etütler
+let pomodoroTimer = {
+    interval: null,
+    sessionId: null,
+    subjectId: null,
+    plannedMinutes: 25,
+    startTime: null,
+    remainingSeconds: 25 * 60,
+    isRunning: false
+};
+
+// API Helper Functions
+async function fetchJson(url) {
+    // site.js AppUtils yüklüyse onu kullan (tek kaynak); yoksa fallback
+    if (window.AppUtils?.fetchJson) return window.AppUtils.fetchJson(url);
+    const res = await fetch(url);
+    if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${errorText ? `: ${errorText}` : ''}`);
+    }
+    return res.json();
+}
+
+async function fetchWithAuth(url, options = {}) {
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        }
+    };
+    
+    return fetch(url, { ...defaultOptions, ...options });
+}
+
+// Dersleri API'den yükle ve günlük programa göre filtrele
+async function loadSubjects() {
+    try {
+        // Tüm dersler + bugünkü program aynı anda çekilir
+        const [allSubjects, todayData] = await Promise.all([
+            fetchJson('/Exam/Subjects'),
+            fetchJson('/Pomodoro/TodaySchedule')
+        ]);
+
+        if (!allSubjects || !Array.isArray(allSubjects)) {
+            throw new Error('Dersler listesi geçersiz format');
+        }
+
+        const todaySchedules = todayData?.schedules || todayData?.Schedules || [];
+        todayScheduleItems = todaySchedules; // Global olarak sakla
+        const todaySubjectIds = new Set(
+            todaySchedules.map(s => s.subjectId || s.SubjectId).filter(id => id != null)
+        );
+
+        // Bugünkü programda olan dersler
+        subjects = allSubjects.filter(s => todaySubjectIds.has(s.id || s.Id));
+
+        renderSubjects(allSubjects);
+
+        // URL'den gelen subjectId parametresi varsa otomatik seç
+        autoSelectFromUrl();
+
+        // Dersler yüklendikten sonra aktif pomodoro kontrolü yap
+        setTimeout(() => {
+            checkActivePomodoro();
+        }, 500);
+    } catch (err) {
+        console.error('Dersler yüklenemedi', err);
+        showNotification('Dersler yüklenemedi: ' + (err.message || 'Bilinmeyen hata'), 'danger');
+    }
+}
+
+// URL query parametresinden subjectId al ve otomatik seç
+function autoSelectFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const subjectIdParam = params.get('subjectId');
+    if (subjectIdParam) {
+        const select = document.getElementById('pomodoro-subject-select');
+        if (select) {
+            select.value = subjectIdParam;
+            // Sayaca scroll yap
+            setTimeout(() => {
+                const timerCard = document.querySelector('.pomodoro-mobile-card');
+                if (timerCard) {
+                    timerCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    }
+}
+
+
+
+// Aktif pomodoro kontrolü
+async function checkActivePomodoro() {
+    try {
+        const response = await fetchJson('/Pomodoro/Active');
+        const session = response?.session || response;
+        
+        if (session && (session.id || session.Id)) {
+            activePomodoro = {
+                id: session.id || session.Id,
+                subjectId: session.subjectId || session.SubjectId,
+                startTime: new Date(session.startTime || session.StartTime),
+                plannedDuration: session.plannedDurationMinutes || session.PlannedDurationMinutes
+            };
+
+            // UI'ı aktif oturuma göre ayağa kaldır
+            hydratePomodoroFromActive(activePomodoro);
+        }
+    } catch (err) {
+        console.error('Aktif pomodoro kontrolü başarısız', err);
+    }
+}
+
+function formatMMSS(totalSeconds) {
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+}
+
+function setPomodoroUiRunning(isRunning) {
+    const startBtn = document.getElementById('pomodoro-btn-start');
+    const stopBtn = document.getElementById('pomodoro-btn-stop');
+    const select = document.getElementById('pomodoro-subject-select');
+    if (startBtn) startBtn.disabled = isRunning;
+    if (stopBtn) stopBtn.disabled = !isRunning;
+    if (select) select.disabled = isRunning;
+}
+
+function renderPomodoroCountdown() {
+    const el = document.getElementById('pomodoro-countdown');
+    if (el) el.textContent = formatMMSS(pomodoroTimer.remainingSeconds);
+}
+
+function clearPomodoroInterval() {
+    if (pomodoroTimer.interval) {
+        clearInterval(pomodoroTimer.interval);
+        pomodoroTimer.interval = null;
+    }
+}
+
+async function hydratePomodoroFromActive(active) {
+    const select = document.getElementById('pomodoro-subject-select');
+    const planned = Number(active.plannedDuration || 25);
+    const elapsedSec = Math.floor((Date.now() - active.startTime.getTime()) / 1000);
+    const remaining = Math.max(0, planned * 60 - elapsedSec);
+
+    pomodoroTimer.sessionId = active.id;
+    pomodoroTimer.subjectId = active.subjectId;
+    pomodoroTimer.plannedMinutes = planned;
+    pomodoroTimer.startTime = active.startTime;
+    pomodoroTimer.remainingSeconds = remaining;
+    pomodoroTimer.isRunning = remaining > 0;
+
+    if (select && active.subjectId) {
+        select.value = String(active.subjectId);
+    }
+
+    renderPomodoroCountdown();
+    setPomodoroUiRunning(pomodoroTimer.isRunning);
+    
+    // Süre dolmuşsa (user offline iken) ve aktif oturum hala varsa -> İPTAL ET (XP Verme)
+    if (!pomodoroTimer.isRunning && pomodoroTimer.sessionId) {
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            await fetch(`/Pomodoro/Cancel?sessionId=${pomodoroTimer.sessionId}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token }
+            });
+            showNotification('Süresi dolmuş, yarım kalan oturum sonlandırıldı (XP verilmedi).', 'warning');
+        } catch (err) {
+            console.error('Auto-cancel failed', err);
+        } finally {
+            resetPomodoroUi();
+        }
+    } else {
+        startPomodoroTick();
+    }
+}
+
+function startPomodoroTick() {
+    clearPomodoroInterval();
+    if (!pomodoroTimer.isRunning) return;
+
+    pomodoroTimer.interval = setInterval(async () => {
+        const elapsed = Math.floor((Date.now() - new Date(pomodoroTimer.startTime).getTime()) / 1000);
+        pomodoroTimer.remainingSeconds = Math.max(0, pomodoroTimer.plannedMinutes * 60 - elapsed);
+        renderPomodoroCountdown();
+
+        if (pomodoroTimer.remainingSeconds <= 0) {
+            clearPomodoroInterval();
+            pomodoroTimer.isRunning = false;
+            setPomodoroUiRunning(false);
+            // Otomatik tamamla
+            await completePomodoroSession(pomodoroTimer.sessionId, pomodoroTimer.plannedMinutes);
+        }
+    }, 1000);
+}
+
+async function startSelectedPomodoro() {
+    const select = document.getElementById('pomodoro-subject-select');
+    const subjectId = Number(select?.value || 0);
+    if (!subjectId) {
+        showNotification('Lütfen bir ders seçin', 'warning');
+        return;
+    }
+
+    // Başka bir aktif oturum varsa engelle
+    if (activePomodoro && activePomodoro.id && activePomodoro.subjectId && activePomodoro.subjectId !== subjectId) {
+        showNotification('Zaten aktif bir pomodoro oturumunuz var! Önce onu tamamlayın veya iptal edin.', 'warning');
+        return;
+    }
+
+    try {
+        // Pomodoro başlat
+        const pomodoroData = {
+            SubjectId: subjectId,
+            PlannedDurationMinutes: 25,
+            SessionType: 'STUDY',
+            Notes: null
+        };
+        
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const res = await fetch('/Pomodoro/Start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(pomodoroData)
+        });
+        
+        if (!res.ok) {
+            const error = await res.text();
+            throw new Error(error);
+        }
+        
+        const pomodoroResponse = await res.json();
+        const session = pomodoroResponse?.session || pomodoroResponse;
+        const sessionId = session?.id || session?.Id;
+        
+        if (!sessionId) {
+            throw new Error('Pomodoro session ID alınamadı');
+        }
+        
+        activePomodoro = {
+            id: sessionId,
+            subjectId: subjectId,
+            startTime: new Date()
+        };
+
+        pomodoroTimer.sessionId = sessionId;
+        pomodoroTimer.subjectId = subjectId;
+        pomodoroTimer.plannedMinutes = 25;
+        pomodoroTimer.startTime = new Date();
+        pomodoroTimer.remainingSeconds = 25 * 60;
+        pomodoroTimer.isRunning = true;
+        renderPomodoroCountdown();
+        setPomodoroUiRunning(true);
+        startPomodoroTick();
+        showNotification('Pomodoro başlatıldı! Çalışmaya başladınız.', 'success');
+        
+    } catch (err) {
+        console.error('Pomodoro başlatma hatası', err);
+
+        // Hata mesajı içinde "Aktif bir oturum" veya "active session" geçiyorsa senkronize et
+        if (err.message && (err.message.includes('Aktif bir oturum') || err.message.includes('active session'))) {
+            showNotification('Mevcut bir oturum tespit edildi, ekran senkronize ediliyor...', 'warning');
+            await checkActivePomodoro();
+            return;
+        }
+
+        showNotification('Pomodoro başlatılamadı: ' + err.message, 'danger');
+    }
+}
+
+async function completePomodoroSession(sessionId, actualMinutes) {
+    if (!sessionId) return;
+    try {
+        const completeData = { ActualDurationMinutes: actualMinutes, Notes: null };
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const res = await fetch(`/Pomodoro/Complete?sessionId=${sessionId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+            body: JSON.stringify(completeData)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const result = await res.json();
+        const session = result?.session || result;
+        const xpEarned = session?.xpEarned || session?.XpEarned || 0;
+        showNotification(`Pomodoro tamamlandı! +${xpEarned} XP kazandınız.`, 'success');
+        updateXpSummary();
+        updatePomodoroStats();
+    } catch (err) {
+        console.error('Pomodoro tamamlama hatası', err);
+        showNotification('Pomodoro kaydedilemedi: ' + err.message, 'danger');
+    } finally {
+        resetPomodoroUi();
+    }
+}
+
+async function stopSelectedPomodoro() {
+    if (!pomodoroTimer.sessionId) {
+        resetPomodoroUi();
+        return;
+    }
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const res = await fetch(`/Pomodoro/Cancel?sessionId=${pomodoroTimer.sessionId}`, {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': token }
+        });
+        if (!res.ok) throw new Error('Pomodoro iptal edilemedi');
+        showNotification('Çalışma durduruldu.', 'info');
+    } catch (err) {
+        console.error('Pomodoro iptal hatası', err);
+        showNotification('İptal edilemedi: ' + err.message, 'danger');
+    } finally {
+        resetPomodoroUi();
+    }
+}
+
+function resetPomodoroUi() {
+    clearPomodoroInterval();
+    activePomodoro = null;
+    pomodoroTimer.sessionId = null;
+    pomodoroTimer.subjectId = null;
+    pomodoroTimer.startTime = null;
+    pomodoroTimer.remainingSeconds = 25 * 60;
+    pomodoroTimer.isRunning = false;
+    renderPomodoroCountdown();
+    setPomodoroUiRunning(false);
+}
+
+// XP özetini güncelle
+async function updateXpSummary() {
+    try {
+        const xpSummary = await fetchJson('/LeaderboardProxy/GetXpSummary');
+        const totalXp = xpSummary?.totalXp || xpSummary?.TotalXp || 0;
+        const todayXp = xpSummary?.todayXp || xpSummary?.TodayXp || 0;
+        
+        // XP özeti göster (eğer sayfada varsa)
+        const xpElement = document.getElementById('xp-summary-display');
+        if (xpElement) {
+            xpElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center me-3">
+                     <div class="text-center">
+                        <span class="d-block text-muted small" style="font-size:0.75rem;">Toplam</span>
+                        <h5 class="fw-bold mb-0 text-primary">${totalXp}</h5>
+                     </div>
+                     <div class="vr mx-3" style="opacity:0.2;"></div>
+                     <div class="text-center">
+                        <span class="d-block text-muted small" style="font-size:0.75rem;">Bugün</span>
+                         <h5 class="fw-bold mb-0 text-success">+${todayXp}</h5>
+                     </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('XP özeti güncellenemedi', err);
+    }
+}
+
+async function updatePomodoroStats() {
+    try {
+        const stats = await fetchJson('/Pomodoro/Stats');
+        const totalSessions = stats?.totalSessions || stats?.TotalSessions || 0;
+        const totalMinutes = stats?.totalMinutesStudied || stats?.TotalMinutesStudied || 0;
+        const totalXp = stats?.totalXpEarned || stats?.TotalXpEarned || 0;
+        const elCount = document.getElementById('pomodoro-summary-count');
+        const elStudy = document.getElementById('pomodoro-summary-study');
+        const elXp = document.getElementById('pomodoro-summary-xp');
+        if (elCount) elCount.textContent = totalSessions;
+        if (elStudy) elStudy.textContent = `0s ${totalMinutes}dk`;
+        if (elXp) elXp.textContent = totalXp;
+    } catch (err) {
+        console.error('Pomodoro stats alınamadı', err);
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Dersleri render et
+function renderSubjects(allSubjectsForStats) {
+    const activeContainer = document.querySelector('.active-lessons-section .row.g-4');
+
+    if (!subjects || subjects.length === 0) {
+        if (activeContainer) {
+            activeContainer.innerHTML = '<div class="col-12"><p class="text-muted">Bugün için planlanmış ders bulunmuyor.</p></div>';
+        }
+        updateStats(allSubjectsForStats || []);
+        return;
+    }
+    
+    // Bugünün programındaki dersleri aktif olarak göster (maks 6)
+    const activeSubjects = subjects.slice(0, 6);
+    
+    renderActiveLessons(activeSubjects);
+    updateStats(allSubjectsForStats || subjects);
+
+    // selectlist doldur
+    const select = document.getElementById('pomodoro-subject-select');
+    if (select) {
+        const options = subjects.map(s => {
+            const id = s.id || s.Id;
+            const name = escapeHtml(s.name || s.Name || '');
+            const shortName = escapeHtml(s.shortName || s.ShortName || '');
+            return `<option value="${id}">${name}${shortName ? ` (${shortName})` : ''}</option>`;
+        }).join('');
+        select.innerHTML = `<option value="">Ders seçiniz...</option>${options}`;
+    }
+}
+
+function renderActiveLessons(activeSubjects) {
+    const container = document.querySelector('.active-lessons-section .row.g-4');
+    if (!container) return;
+    
+    if (activeSubjects.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">Aktif ders bulunmuyor.</p></div>';
+        return;
+    }
+
+    // Bugünkü konuları subject bazlı grupla
+    const todayTopicsBySubject = {};
+    (todayScheduleItems || []).forEach(item => {
+        const sid = item.subjectId || item.SubjectId;
+        const topic = item.topic || item.Topic || '';
+        if (topic && sid) {
+            if (!todayTopicsBySubject[sid]) todayTopicsBySubject[sid] = [];
+            if (!todayTopicsBySubject[sid].includes(topic)) todayTopicsBySubject[sid].push(topic);
+        }
+    });
+    
+    container.innerHTML = activeSubjects.map((subject) => {
+        const subjectName = escapeHtml(subject.name || '');
+        const shortName = escapeHtml(subject.shortName || '');
+        const examType = escapeHtml(subject.examType || 'TYT/AYT');
+        const colorHex = subject.colorHex || '#3498db';
+        const maxQuestions = subject.maxQuestions || 0;
+        const subjectId = subject.id || subject.Id;
+        const topics = todayTopicsBySubject[subjectId] || [];
+        const topicsHtml = topics.length > 0 
+            ? `<div class="mt-2"><span class="badge bg-light text-dark me-1" style="font-size:.75rem;"><i class="bi bi-bookmark-fill me-1" style="color:${colorHex}"></i>${topics.join('</span><span class="badge bg-light text-dark me-1" style="font-size:.75rem;"><i class="bi bi-bookmark-fill me-1" style="color:' + colorHex + '"></i>')}</span></div>`
+            : '';
+        
+        return `
+            <div class="col-lg-6">
+                <div class="lesson-card active-lesson" data-subject-id="${subjectId}">
+                    <div class="lesson-header">
+                        <div class="lesson-icon" style="background-color: ${colorHex};">
+                            <i class="bi bi-book"></i>
+                        </div>
+                        <div class="lesson-info">
+                            <h4>${subjectName}</h4>
+                            <p class="lesson-subject">${shortName}</p>
+                        </div>
+                        <div class="lesson-status">
+                            <span class="badge bg-primary">Aktif</span>
+                        </div>
+                    </div>
+                    <div class="lesson-content">
+                        <p>${examType} - ${maxQuestions} soru</p>
+                        ${topicsHtml}
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-sm btn-primary" type="button" onclick="selectSubjectForPomodoro(${subjectId})">
+                                <i class="bi bi-check2-circle"></i> Bu dersle çalış
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// HTML escape helper
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function updateStats(allSubjects) {
+    const totalEl = document.querySelector('.total-stat .stat-number');
+    const activeEl = document.querySelector('.weekly-stat .stat-number');
+    if (totalEl) {
+        totalEl.textContent = allSubjects.length;
+    }
+    if (activeEl) {
+        activeEl.textContent = subjects.length;
+    }
+}
+
+// Sayfa yüklendiğinde
+document.addEventListener('DOMContentLoaded', function() {
+    loadSubjects();
+    updateXpSummary();
+    updatePomodoroStats();
+
+    const startBtn = document.getElementById('pomodoro-btn-start');
+    const stopBtn = document.getElementById('pomodoro-btn-stop');
+    startBtn?.addEventListener('click', startSelectedPomodoro);
+    stopBtn?.addEventListener('click', stopSelectedPomodoro);
+    renderPomodoroCountdown();
+});
+
+function selectSubjectForPomodoro(subjectId) {
+    const select = document.getElementById('pomodoro-subject-select');
+    if (select) {
+        select.value = String(subjectId);
+        select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+</script>

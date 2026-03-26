@@ -1,0 +1,10 @@
+C:\Program Files\dotnet\sdk\9.0.200\Microsoft.Common.CurrentVersion.targets(5363,5): error MSB3027: "C:\Users\90537\source\repos\EgitimPrj\EgitimPrj\obj\Debug\net9.0\apphost.exe", "bin\Debug\net9.0\EgitimPrj.exe" üzerine kopyalanamadı. 10 yeniden deneme sayısı aşıldı. Başarısız oldu. Dosya şunun tarafından kilitlendi: "EgitimPrj (18192)" [C:\Users\90537\source\repos\EgitimPrj\EgitimPrj\EgitimPrj.csproj]
+C:\Program Files\dotnet\sdk\9.0.200\Microsoft.Common.CurrentVersion.targets(5363,5): error MSB3021: "C:\Users\90537\source\repos\EgitimPrj\EgitimPrj\obj\Debug\net9.0\apphost.exe" dosyası "bin\Debug\net9.0\EgitimPrj.exe" üzerine kopyalanamıyor. The process cannot access the file 'C:\Users\90537\source\repos\EgitimPrj\EgitimPrj\bin\Debug\net9.0\EgitimPrj.exe' because it is being used by another process. [C:\Users\90537\source\repos\EgitimPrj\EgitimPrj\EgitimPrj.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+    10 Uyarı
+    2 Hata
+
+Geçen Süre 00:00:12.56
+
+İş yükü güncelleştirmeleri var. Daha fazla bilgi için `dotnet workload list` çalıştırın.

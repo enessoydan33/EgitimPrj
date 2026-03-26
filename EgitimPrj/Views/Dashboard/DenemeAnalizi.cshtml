@@ -1,0 +1,347 @@
+@{
+    ViewData["Title"] = "Deneme Analizi";
+}
+
+<div class="ai-detail-container">
+    <!-- Başlık Bölümü -->
+    <!-- Başlık Bölümü -->
+    <div class="modern-page-header header-ai mb-4">
+        <div class="modern-header-content">
+            <a asp-action="AIWork" asp-controller="Dashboard" class="btn btn-light rounded-circle shadow-sm me-3" style="width: 48px; height: 48px; display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-arrow-left text-primary"></i>
+            </a>
+            <div class="modern-header-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Deneme Analizi</h1>
+                <p>Detaylı deneme sınavı analizi ile performansınızı takip edin</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Genel Özet -->
+        <div class="col-lg-4 col-md-6">
+            <div class="detail-card">
+                <h3 class="card-section-title">
+                    <i class="bi bi-trophy"></i>
+                    Son Deneme Skoru
+                </h3>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <div class="score-inner">
+                            <h2 class="score-number">425</h2>
+                            <p class="score-total">/500</p>
+                        </div>
+                    </div>
+                    <div class="score-trend">
+                        <span class="trend-badge up">
+                            <i class="bi bi-arrow-up"></i> +15 puan
+                        </span>
+                        <p class="trend-text">Önceki denemeye göre</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="detail-card">
+                <h3 class="card-section-title">
+                    <i class="bi bi-target"></i>
+                    Güçlü Alanlar
+                </h3>
+                <div class="strength-display">
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Matematik</span>
+                            <span class="strength-percent">%92</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar math" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Türkçe</span>
+                            <span class="strength-percent">%88</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar turkish" style="width: 88%"></div>
+                        </div>
+                    </div>
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Tarih</span>
+                            <span class="strength-percent">%85</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar history" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="detail-card">
+                <h3 class="card-section-title">
+                    <i class="bi bi-pie-chart"></i>
+                    Konu Analizi
+                </h3>
+                <div class="strength-display">
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Kimya</span>
+                            <span class="strength-percent">%83</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar chemistry" style="width: 83%"></div>
+                        </div>
+                    </div>
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Biyoloji</span>
+                            <span class="strength-percent">%75</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar biology" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="strength-item">
+                        <div class="strength-header">
+                            <span class="strength-subject">Fizik</span>
+                            <span class="strength-percent">%61</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar physics" style="width: 61%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detaylı Analiz -->
+        <div class="col-lg-12">
+            <div class="detail-card">
+                <h3 class="card-section-title">
+                    <i class="bi bi-clipboard-data"></i>
+                    Detaylı Ders Analizi
+                </h3>
+                <div class="subject-analysis">
+                    <div class="row g-3">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Matematik</h5>
+                                    <span class="subject-score">92/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>23/25</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">2</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>0</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-arrow-up text-success"></i>
+                                    <span>Önceki denemeye göre +5 puan</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Türkçe</h5>
+                                    <span class="subject-score">88/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>22/25</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">3</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>0</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-arrow-up text-success"></i>
+                                    <span>Önceki denemeye göre +3 puan</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Fizik</h5>
+                                    <span class="subject-score">45/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>9/20</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">8</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>3</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-arrow-down text-danger"></i>
+                                    <span>Önceki denemeye göre -5 puan</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Kimya</h5>
+                                    <span class="subject-score">52/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>10/20</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">7</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>3</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-arrow-up text-success"></i>
+                                    <span>Önceki denemeye göre +2 puan</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Biyoloji</h5>
+                                    <span class="subject-score">58/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>12/20</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">5</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>3</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-dash text-warning"></i>
+                                    <span>Önceki denemeye göre aynı</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>Tarih</h5>
+                                    <span class="subject-score">85/100</span>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>17/20</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">2</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>1</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi bi-arrow-up text-success"></i>
+                                    <span>Önceki denemeye göre +7 puan</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Önerileri -->
+        <div class="col-lg-12">
+            <div class="detail-card">
+                <h3 class="card-section-title">
+                    <i class="bi bi-lightbulb"></i>
+                    AI Önerileri
+                </h3>
+                <div class="ai-recommendations">
+                    <div class="recommendation-card">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-exclamation-circle"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Fizik Konularına Odaklanın</h5>
+                            <p>Fizik dersinde %45 başarı oranınız var. Mekanik ve elektrik konularına daha fazla çalışma zamanı ayırmanız önerilir.</p>
+                        </div>
+                    </div>
+                    <div class="recommendation-card">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Matematik Performansınızı Sürdürün</h5>
+                            <p>Matematik dersinde gösterdiğiniz %92 başarı oranını koruyarak diğer derslere de zaman ayırabilirsiniz.</p>
+                        </div>
+                    </div>
+                    <div class="recommendation-card">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h5>Deneme Sıklığını Artırın</h5>
+                            <p>Haftada en az 2 deneme sınavı çözerek pratik yapma seviyenizi artırmanız önerilir.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+

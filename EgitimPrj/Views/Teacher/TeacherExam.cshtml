@@ -1,0 +1,706 @@
+@{
+    ViewData["Title"] = "Öğrenci Denemesi Ekle";
+}
+
+<div class="teacher-exam-container fade-in-up mt-5">
+
+    <!-- ===== HEADER ===== -->
+    <div class="modern-page-header header-exam">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-journal-check"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Öğrenci Denemesi Ekle</h1>
+                <p>Öğrencilerinizin deneme sonuçlarını girin ve performanslarını takip edin.</p>
+            </div>
+        </div>
+        <div class="modern-header-actions">
+            <a asp-action="TeacherPanel" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Panele Dön
+            </a>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- ===== DENEME EKLEME FORMU (TAM GENİŞLİK) ===== -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="icon-box icon-box-exam">
+                        <i class="bi bi-journal-plus"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Yeni Deneme Sonucu</h5>
+                        <p class="text-muted small mb-0">Öğrenci ve deneme bilgilerini girin</p>
+                    </div>
+                </div>
+
+                <form id="exam-form">
+                    <!-- Öğrenci Seçimi -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Öğrenci</label>
+                        <select class="form-select form-select-modern" id="exam-student" required>
+                            <option value="">Öğrenci seçin...</option>
+                        </select>
+                    </div>
+
+                    <!-- Deneme Türü -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Deneme Türü</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="target-btn exam-type-btn active flex-fill" data-examtype="TYT">
+                                <i class="bi bi-mortarboard me-1"></i>TYT
+                            </button>
+                            <button type="button" class="target-btn exam-type-btn flex-fill" data-examtype="AYT">
+                                <i class="bi bi-mortarboard-fill me-1"></i>AYT
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Deneme Adı -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Deneme Adı</label>
+                        <input type="text" class="form-control form-control-modern" id="exam-name"
+                               placeholder="Örn: TYT Deneme #3" required>
+                    </div>
+
+                    <!-- Deneme Tarihi -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Deneme Tarihi</label>
+                        <input type="date" class="form-control form-control-modern" id="exam-date" required>
+                    </div>
+
+                    <!-- Ders Bazlı Net Girişi -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Ders Bazlı Sonuçlar</label>
+                        <div id="exam-subjects-container">
+                        </div>
+                    </div>
+
+                    <!-- Toplam Net Göstergesi -->
+                    <div class="exam-total-net-box mb-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="exam-total-label">
+                                <i class="bi bi-calculator me-1"></i>Toplam Net
+                            </span>
+                            <span class="exam-total-value" id="exam-total-net">0.00</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-gradient-exam w-100 fw-bold py-3">
+                        <i class="bi bi-journal-plus me-2"></i>Deneme Sonucunu Kaydet
+                    </button>
+                    <div id="exam-feedback" class="mt-3 text-center fw-medium d-none"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ÖĞRENCİ PERFORMANSI TABLOSU (TAM GENİŞLİK) ===== -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-box icon-box-exam">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-dark">Öğrenci Performansı</h5>
+                    </div>
+                    <div class="d-flex gap-3 flex-wrap align-items-center">
+                        <div class="position-relative">
+                            <i class="bi bi-search search-icon-inner"></i>
+                            <input type="text" class="form-control form-control-modern ps-5"
+                                   id="student-search" placeholder="Öğrenci ara..."
+                                   style="min-width:240px;font-size:1rem;padding:.7rem 1rem .7rem 2.8rem;">
+                        </div>
+                        <select class="form-select form-select-modern" id="filter-class"
+                                style="width:auto;font-size:1rem;padding:.7rem 2.2rem .7rem 1rem;">
+                            <option value="all">Tüm Sınıflar</option>
+                            <option value="10-A">10-A</option>
+                            <option value="10-B">10-B</option>
+                            <option value="11-A">11-A</option>
+                            <option value="11-B">11-B</option>
+                            <option value="12-A">12-A</option>
+                        </select>
+                        <div class="d-flex gap-2">
+                            <button class="exam-filter-btn active" id="exam-tyt" onclick="setExamFilter('tyt')">
+                                <i class="bi bi-mortarboard-fill me-1"></i>TYT
+                            </button>
+                            <button class="exam-filter-btn" id="exam-ayt" onclick="setExamFilter('ayt')">
+                                <i class="bi bi-award-fill me-1"></i>AYT
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    <button class="sort-btn active" id="sort-desc" onclick="setSort('desc')" title="Net: Yüksekten Düşüğe">
+                        <i class="bi bi-sort-numeric-down-alt"></i> Yüksek → Düşük
+                    </button>
+                    <button class="sort-btn" id="sort-asc" onclick="setSort('asc')" title="Net: Düşükten Yüksek">
+                        <i class="bi bi-sort-numeric-up"></i> Düşük → Yüksek
+                    </button>
+                    <button class="sort-btn" id="sort-name" onclick="setSort('name')" title="İsme Göre">
+                        <i class="bi bi-sort-alpha-down"></i> İsim
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table student-perf-table">
+                        <thead id="student-table-head">
+                        </thead>
+                        <tbody id="student-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+@section Styles {
+<style>
+    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    @@keyframes fadeInUp {
+        from { opacity:0; transform:translateY(20px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .header-exam { background:linear-gradient(135deg,#ea580c 0%,#f97316 100%); }
+
+    .glass-card {
+        background:#fff; border-radius:24px;
+        border:1px solid rgba(226,232,240,.8);
+        box-shadow:0 10px 30px rgba(0,0,0,.03);
+        transition:transform .3s,box-shadow .3s;
+    }
+    .glass-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,.06); }
+
+    .icon-box-exam {
+        width:44px; height:44px; background:#fff7ed; color:#ea580c;
+        border-radius:12px; display:flex; align-items:center;
+        justify-content:center; font-size:1.1rem; flex-shrink:0;
+    }
+
+    .form-label-modern {
+        font-size:.8rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:#64748b; margin-bottom:.4rem; display:block;
+    }
+    .form-control-modern, .form-select-modern {
+        border:2px solid #e2e8f0; border-radius:12px;
+        padding:.7rem 1rem; font-size:.95rem; color:#1e293b;
+        background:#f8fafc; transition:all .3s;
+    }
+    .form-control-modern:focus, .form-select-modern:focus {
+        background:#fff; border-color:#f97316;
+        box-shadow:0 0 0 4px rgba(249,115,22,.1); outline:none;
+    }
+
+    .target-btn {
+        border:2px solid #e2e8f0; border-radius:12px;
+        background:#f8fafc; color:#64748b; padding:.6rem .75rem;
+        font-size:.85rem; font-weight:600; cursor:pointer;
+        transition:all .2s;
+    }
+    .target-btn.active {
+        border-color:#f97316; background:#fff7ed; color:#ea580c;
+    }
+    .target-btn:hover:not(.active) { border-color:#fed7aa; background:#fffbeb; }
+
+    .btn-gradient-exam {
+        background:linear-gradient(135deg,#ea580c 0%,#f97316 100%);
+        border:none; color:#fff; border-radius:12px;
+        font-size:.95rem; letter-spacing:.5px;
+        transition:filter .3s,transform .2s;
+    }
+    .btn-gradient-exam:hover { filter:brightness(110%); transform:translateY(-2px); color:#fff; }
+
+    .exam-total-net-box {
+        background:linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%);
+        border:2px solid #fed7aa; border-radius:16px;
+        padding:1rem 1.25rem;
+    }
+    .exam-total-label {
+        font-size:.85rem; font-weight:700; color:#9a3412;
+        text-transform:uppercase; letter-spacing:.5px;
+    }
+    .exam-total-value {
+        font-size:1.6rem; font-weight:800; color:#ea580c;
+    }
+
+    .subject-score-row {
+        background:#f8fafc; border-radius:12px;
+        padding:.75rem 1rem; margin-bottom:.5rem;
+        border:1px solid #e2e8f0; transition:background .2s;
+    }
+    .subject-score-row:hover { background:#f1f5f9; }
+    .subject-score-row .subject-name {
+        font-weight:700; color:#1e293b; font-size:.88rem; min-width:100px;
+    }
+    .subject-score-row .subject-net {
+        font-weight:800; font-size:.85rem; min-width:55px; text-align:right;
+    }
+    .subject-score-row input[type=number] {
+        width:65px; text-align:center; border:2px solid #e2e8f0;
+        border-radius:8px; padding:.35rem .4rem; font-size:.85rem;
+        font-weight:600; background:#fff; transition:all .2s;
+    }
+    .subject-score-row input[type=number]:focus {
+        border-color:#f97316; box-shadow:0 0 0 3px rgba(249,115,22,.12); outline:none;
+    }
+    .subject-score-row .input-label {
+        font-size:.7rem; font-weight:600; color:#94a3b8;
+        text-transform:uppercase; letter-spacing:.3px;
+    }
+
+    /* ===== SEARCH ICON ===== */
+    .search-icon-inner {
+        position:absolute; left:14px; top:50%;
+        transform:translateY(-50%); color:#94a3b8; z-index:2;
+    }
+
+    /* ===== ÖĞRENCİ PERFORMANS TABLOSU ===== */
+    .student-perf-table { border-collapse:separate; border-spacing:0 10px; width:100%; min-width:700px; }
+    .student-perf-table thead th {
+        font-size:.82rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.6px; color:#94a3b8; border:none; padding:.7rem .8rem;
+        background:transparent; text-align:center;
+    }
+    .student-perf-table thead th:first-child,
+    .student-perf-table thead th:nth-child(2) { text-align:left; }
+    .student-perf-table thead th.subject-col {
+        font-weight:800; font-size:.82rem;
+    }
+    .student-perf-table thead th.total-col {
+        font-weight:800; font-size:.82rem; color:#1e293b;
+    }
+    .student-perf-table tbody tr {
+        background:#f8fafc; transition:background .2s, transform .2s;
+        cursor:pointer;
+    }
+    .student-perf-table tbody tr:hover { background:#f1f5f9; transform:translateX(3px); }
+    .student-perf-table tbody td {
+        padding:.9rem .8rem; border:none; vertical-align:middle;
+        font-size:1rem; text-align:center;
+    }
+    .student-perf-table tbody td:first-child {
+        border-radius:14px 0 0 14px; border-left:5px solid #f97316;
+        text-align:left;
+    }
+    .student-perf-table tbody td:nth-child(2) { text-align:left; }
+    .student-perf-table tbody td:last-child { border-radius:0 14px 14px 0; }
+
+    .sc-avatar {
+        width:40px; height:40px; border-radius:50%;
+        background:linear-gradient(135deg,#ea580c,#f97316);
+        color:#fff; font-size:.85rem; font-weight:700;
+        display:inline-flex; align-items:center;
+        justify-content:center; flex-shrink:0; margin-right:.65rem;
+    }
+    .sc-name { font-weight:700; color:#1e293b; font-size:1rem; }
+
+    /* Ders hücresi */
+    .subject-net-cell {
+        font-weight:700; font-size:1rem;
+        display:inline-flex; align-items:center; justify-content:center;
+        width:50px; height:38px; border-radius:10px;
+    }
+    .subject-net-cell.has-value { background:rgba(249,115,22,.08); color:#1e293b; }
+    .subject-net-cell.zero-value { color:#cbd5e1; font-weight:500; }
+
+    /* Toplam hücresi */
+    .total-net {
+        font-weight:800; font-size:1.1rem; letter-spacing:-.3px;
+        display:inline-flex; align-items:center; justify-content:center;
+        width:60px; height:40px; border-radius:12px;
+    }
+    .total-high   { background:rgba(22,163,74,.12); color:#16a34a; }
+    .total-medium { background:rgba(202,138,4,.12); color:#ca8a04; }
+    .total-low    { background:rgba(220,38,38,.12); color:#dc2626; }
+
+    /* ===== EXAM FILTER BUTTONS ===== */
+    .exam-filter-btn {
+        border:2px solid #e2e8f0; border-radius:12px;
+        background:#f8fafc; color:#64748b;
+        padding:.55rem 1.2rem; font-size:1rem; font-weight:700;
+        cursor:pointer; white-space:nowrap; transition:all .25s;
+    }
+    .exam-filter-btn:hover { border-color:#fed7aa; background:#fff7ed; color:#ea580c; }
+    .exam-filter-btn.active {
+        border-color:#f97316; background:linear-gradient(135deg,#ea580c,#f97316);
+        color:#fff; box-shadow:0 4px 12px rgba(249,115,22,.3);
+    }
+
+    /* ===== SORT BUTONLARI ===== */
+    .sort-btn {
+        border:2px solid #e2e8f0; border-radius:12px;
+        background:#f8fafc; color:#64748b;
+        padding:.55rem 1.1rem; font-size:.95rem; font-weight:600;
+        cursor:pointer; white-space:nowrap; transition:all .2s;
+    }
+    .sort-btn:hover { border-color:#fed7aa; background:#fff7ed; color:#ea580c; }
+    .sort-btn.active { border-color:#f97316; background:#fff7ed; color:#ea580c; }
+
+
+</style>
+}
+
+@section Scripts {
+<script>
+// ===================================================
+// VERİ KAYNAĞI — TeacherPanel API
+// ===================================================
+let demoStudents = []; // API'den dolacak
+
+// Dersler Subject API'den gelecek (ExamController.Subjects)
+const examSubjectsCache = {
+    TYT: null,
+    AYT: null
+};
+
+let currentExamType = 'TYT';
+
+// ===================================================
+// PERFORMANS TABLOSU İÇİN VERİ ve FONKSİYONLAR
+// ===================================================
+const subjectColors = {
+    matematik:"#6366f1", fizik:"#3b82f6", kimya:"#10b981",
+    biyoloji:"#22c55e", turkce:"#f59e0b", tarih:"#ef4444",
+    cografya:"#8b5cf6", fen:"#10b981", sosyal:"#ef4444",
+    edebiyat:"#f59e0b"
+};
+
+const subjectLabels = {
+    turkce:"Tür", matematik:"Mat", fen:"Fen", sosyal:"Sos",
+    fizik:"Fiz", kimya:"Kim", biyoloji:"Bio",
+    edebiyat:"Ede", tarih:"Tar", cografya:"Coğ"
+};
+
+// Performans tablosunda sadece toplam net gösteriyoruz
+const tableExamSubjects = {
+    tyt: [],
+    ayt: []
+};
+
+let currentTableExam = 'tyt';
+let currentSort = 'desc';
+
+function setExamFilter(type) {
+    currentTableExam = type;
+    document.querySelectorAll('.exam-filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('exam-' + type).classList.add('active');
+    applyFilters();
+}
+
+function getActiveKeys() {
+    return tableExamSubjects[currentTableExam];
+}
+
+function getTotal(s) {
+    const data = s[currentTableExam] || {};
+    if (typeof data.total === 'number') return data.total;
+    const keys = getActiveKeys();
+    return keys.reduce((sum, k) => sum + (data[k] || 0), 0);
+}
+
+function renderTableHead() {
+    const thead = document.getElementById('student-table-head');
+    const keys = getActiveKeys();
+    const headerCells = keys.map(k => {
+        const color = subjectColors[k] || '#6366f1';
+        const label = subjectLabels[k] || k;
+        return `<th class="subject-col" style="color:${color}">${label}</th>`;
+    }).join('');
+    thead.innerHTML = `<tr>
+        <th>Öğrenci</th>
+        <th>Sınıf</th>
+        ${headerCells}
+        <th class="total-col">Toplam</th>
+    </tr>`;
+}
+
+function renderStudentCards(students) {
+    const tbody = document.getElementById('student-table-body');
+    const keys = getActiveKeys();
+    const colCount = keys.length + 3;
+    if (!students.length) {
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 d-block mb-3 opacity-50"></i>
+            <p>Öğrenci bulunamadı.</p></td></tr>`;
+        return;
+    }
+    tbody.innerHTML = students.map(s => {
+        const initials = s.name.split(' ').map(w => w[0]).join('').toUpperCase();
+        const total = getTotal(s);
+        const totalCls = total >= 75 ? 'total-high' : total >= 50 ? 'total-medium' : 'total-low';
+        const data = s[currentTableExam];
+
+        const subjectCells = keys.map(k => {
+            const val = data[k] || 0;
+            const cls = val > 0 ? 'has-value' : 'zero-value';
+            return `<td><span class="subject-net-cell ${cls}">${val > 0 ? val : '–'}</span></td>`;
+        }).join('');
+
+        return `
+        <tr onclick="window.location.href='/Teacher/StudentProfile/${s.id}?classroomId=${s.classroomId}'" title="Profili görüntüle">
+            <td>
+                <div class="d-flex align-items-center">
+                    <span class="sc-avatar">${initials}</span>
+                    <span class="sc-name">${s.name}</span>
+                </div>
+            </td>
+            <td><span class="badge" style="background:#f1f5f9;color:#475569;font-size:.88rem;padding:.35rem .65rem;">${s.cls}</span></td>
+            ${subjectCells}
+            <td><span class="total-net ${totalCls}">${total.toFixed(1)}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+// API yardımcıları
+async function apiGet(url) {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+async function apiPost(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(body ?? {})
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+// Sınıf + öğrenci verilerini TeacherPanel API'den yükle
+async function loadStudentsFromTeacherPanel() {
+    const classrooms = await apiGet('/TeacherPanelProxy/Classrooms');
+    const all = [];
+
+    for (const c of classrooms || []) {
+        const performances = await apiGet(`/TeacherPanelProxy/ClassroomPerformances?classroomId=${encodeURIComponent(c.id)}`);
+        (performances || []).forEach(p => {
+            all.push({
+                id: p.studentId,
+                name: p.studentName,
+                cls: c.name,
+                classroomId: c.id,
+                tyt: { total: p.averageNetScore || 0 },
+                ayt: { total: p.averageNetScore || 0 }
+            });
+        });
+    }
+
+    demoStudents = all;
+
+    // Öğrenci dropdown'unu doldur
+    const sel = document.getElementById('exam-student');
+    if (sel) {
+        sel.innerHTML = '<option value=\"\">Öğrenci seçin...</option>';
+        demoStudents.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.name} (${s.cls})`;
+            sel.appendChild(opt);
+        });
+    }
+}
+
+// Arama, Sınıf Filtresi & Sıralama
+function setSort(dir) {
+    currentSort = dir;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sort-' + dir).classList.add('active');
+    applyFilters();
+}
+
+function applyFilters() {
+    renderTableHead();
+    const q   = document.getElementById('student-search').value.toLowerCase();
+    const cls = document.getElementById('filter-class').value;
+    let result = demoStudents.filter(s =>
+        s.name.toLowerCase().includes(q) &&
+        (cls === 'all' || s.cls === cls)
+    );
+    if (currentSort === 'desc') result.sort((a,b) => getTotal(b) - getTotal(a));
+    else if (currentSort === 'asc')  result.sort((a,b) => getTotal(a) - getTotal(b));
+    else if (currentSort === 'name') result.sort((a,b) => a.name.localeCompare(b.name, 'tr'));
+    renderStudentCards(result);
+}
+
+document.getElementById('student-search').addEventListener('input', applyFilters);
+document.getElementById('filter-class').addEventListener('change', applyFilters);
+
+// ===================================================
+// DENEME FORMU FONKSİYONLARI
+// ===================================================
+
+// Deneme ders listesi render — Subject API'den gelen dersler
+async function renderExamSubjects(type) {
+    const container = document.getElementById('exam-subjects-container');
+    if (!container) return;
+
+    if (!examSubjectsCache[type]) {
+        const subjects = await apiGet(`/Exam/Subjects?examType=${encodeURIComponent(type)}`);
+        examSubjectsCache[type] = Array.isArray(subjects) ? subjects : [];
+    }
+
+    const subjects = examSubjectsCache[type];
+    container.innerHTML = subjects.map(s => {
+        const maxQ = s.maxQuestions ?? s.MaxQuestions ?? 0;
+        const color = s.colorHex ?? s.ColorHex ?? '#6366f1';
+        return `
+        <div class="subject-score-row d-flex align-items-center gap-3"
+             data-maxq="${maxQ}" data-subject-id="${s.id ?? s.Id}">
+            <span class="subject-name" style="color:${color}">
+                <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle;"></i>${s.name ?? s.Name}
+            </span>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <div class="text-center">
+                    <div class="input-label">Doğru</div>
+                    <input type="number" class="exam-correct" min="0" max="${maxQ}" value="0"
+                           oninput="calcExamNets()" />
+                </div>
+                <div class="text-center">
+                    <div class="input-label">Yanlış</div>
+                    <input type="number" class="exam-wrong" min="0" max="${maxQ}" value="0"
+                           oninput="calcExamNets()" />
+                </div>
+                <div class="text-center" style="min-width:40px">
+                    <div class="input-label">/${maxQ}</div>
+                    <span class="subject-net" style="color:${color}">0.00</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    calcExamNets();
+}
+
+function calcExamNets() {
+    let totalNet = 0;
+    document.querySelectorAll('#exam-subjects-container .subject-score-row').forEach(row => {
+        const maxQ = parseInt(row.dataset.maxq) || 999;
+        const correctEl = row.querySelector('.exam-correct');
+        const wrongEl   = row.querySelector('.exam-wrong');
+        const netEl     = row.querySelector('.subject-net');
+        let correct = Math.max(0, Math.min(maxQ, parseInt(correctEl.value) || 0));
+        let wrong   = Math.max(0, Math.min(maxQ - correct, parseInt(wrongEl.value) || 0));
+        const net = correct - (wrong / 4);
+        netEl.textContent = net.toFixed(2);
+        totalNet += net;
+    });
+    document.getElementById('exam-total-net').textContent = totalNet.toFixed(2);
+}
+
+// Deneme türü seçimi
+document.querySelectorAll('.exam-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.exam-type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentExamType = btn.dataset.examtype;
+        renderExamSubjects(currentExamType);
+    });
+});
+
+
+// Form submit — TeacherPanel üzerinden öğrenciye deneme ekle
+document.getElementById('exam-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const studentSel = document.getElementById('exam-student');
+    const studentId  = parseInt(studentSel.value);
+    const examName   = document.getElementById('exam-name').value.trim();
+    const examDate   = document.getElementById('exam-date').value;
+
+    if (!studentId || !examName || !examDate) return;
+
+    const student = demoStudents.find(s => s.id === studentId);
+    const classroomId = student?.classroomId;
+    if (!classroomId) {
+        console.warn('Öğrencinin sınıfı bulunamadı, deneme eklenemedi.');
+        return;
+    }
+
+    const subjectScores = [];
+    document.querySelectorAll('#exam-subjects-container .subject-score-row').forEach(row => {
+        const subjectId = parseInt(row.dataset.subjectId);
+        const maxQ = parseInt(row.dataset.maxq) || 0;
+        const correctEl = row.querySelector('.exam-correct');
+        const wrongEl   = row.querySelector('.exam-wrong');
+        let correct = Math.max(0, Math.min(maxQ, parseInt(correctEl.value) || 0));
+        let wrong   = Math.max(0, Math.min(maxQ - correct, parseInt(wrongEl.value) || 0));
+        const empty  = Math.max(0, maxQ - (correct + wrong));
+
+        if (subjectId) {
+            subjectScores.push({
+                subjectId: subjectId,
+                correctAnswers: correct,
+                wrongAnswers: wrong,
+                emptyAnswers: empty
+            });
+        }
+    });
+
+    if (!subjectScores.length) return;
+
+    const payload = {
+        name: examName,
+        examType: currentExamType,
+        examDate: examDate,
+        durationMinutes: null,
+        notes: null,
+        subjectScores: subjectScores
+    };
+
+    const el = document.getElementById('exam-feedback');
+
+    try {
+        await apiPost(`/TeacherPanelProxy/AddStudentTrialExam?classroomId=${encodeURIComponent(classroomId)}&studentId=${encodeURIComponent(studentId)}`, payload);
+
+        // Formu sıfırla
+        e.target.reset();
+        document.getElementById('exam-date').valueAsDate = new Date();
+        await renderExamSubjects(currentExamType);
+
+        const tytBtn = document.querySelector('.exam-type-btn[data-examtype="TYT"]');
+        if (tytBtn) {
+            document.querySelectorAll('.exam-type-btn').forEach(b => b.classList.remove('active'));
+            tytBtn.classList.add('active');
+            currentExamType = 'TYT';
+        }
+
+        el.textContent = '📝 Deneme sonucu başarıyla kaydedildi!';
+        el.className = 'mt-3 text-center fw-bold text-success';
+    } catch (err) {
+        console.error('Deneme kaydedilemedi', err);
+        el.textContent = '❌ Deneme kaydedilemedi. Lütfen tekrar deneyin.';
+        el.className = 'mt-3 text-center fw-bold text-danger';
+    }
+
+    setTimeout(() => el.className = 'mt-3 text-center fw-medium d-none', 3000);
+});
+
+// ===================================================
+// INIT
+// ===================================================
+(async function() {
+    try {
+        await loadStudentsFromTeacherPanel();
+    } catch (err) {
+        console.error('Öğrenciler yüklenemedi', err);
+    }
+
+    applyFilters();
+    await renderExamSubjects('TYT');
+    document.getElementById('exam-date').valueAsDate = new Date();
+})();
+</script>
+}

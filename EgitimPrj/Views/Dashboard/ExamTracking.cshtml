@@ -1,0 +1,1501 @@
+@model EgitimPrj.Models.ViewModel.ExamViewModel.CreateExamViewModel
+@using EgitimPrj.Models.ViewModel.ExamViewModel
+@using System
+@using System.Linq
+@{
+    ViewData["Title"] = "Deneme Takibi";
+}
+
+
+
+@if (TempData["ExamSuccess"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        <i class="bi bi-check-circle me-1"></i> @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="exam-tracking-container">
+    <!-- Başlık Bölümü -->
+    <!-- Başlık Bölümü -->
+    <div class="modern-page-header header-exams">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Deneme Takibi</h1>
+                <p>Sınav performansınızı takip edin ve gelişiminizi analiz edin</p>
+            </div>
+        </div>
+        <div class="modern-header-actions">
+            <button type="button" class="btn btn-light text-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addExamModal">
+                <i class="bi bi-plus-circle me-1"></i>
+                Yeni Deneme Ekle
+            </button>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <!-- Genel İstatistikler -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card total-exams">
+                <div class="stat-icon">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" id="stat-total-exams">-</h3>
+                    <p class="stat-label">Toplam Deneme</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card average-score">
+                <div class="stat-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" id="stat-average-net">-</h3>
+                    <p class="stat-label">Ortalama Net</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card best-score">
+                <div class="stat-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" id="stat-highest-net">-</h3>
+                    <p class="stat-label">En İyi Net</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card improvement">
+                <div class="stat-icon">
+                    <i class="bi bi-arrow-up-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" id="stat-last-change">-</h3>
+                    <p class="stat-label">Son Değişim</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Deneme Listesi ve Görünüm Seçimi -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+                <h3 class="section-title mb-0" id="main-exam-title">
+                    <i class="bi bi-clock-history" id="main-exam-icon"></i>
+                    <span id="main-exam-title-text">Son Denemeler</span>
+                </h3>
+                <div class="w-auto">
+                    <div class="view-toggle-container">
+                        <button class="view-toggle-btn active" data-mode="recent">
+                            <i class="bi bi-lightning-charge-fill"></i> Son Denemeler
+                        </button>
+                        <button class="view-toggle-btn" data-mode="all">
+                            <i class="bi bi-collection-fill"></i> Tüm Denemeler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Görünüm: Son Denemeler -->
+        <div id="view-recent-container" class="col-12 animation-fade">
+             <div class="recent-exams-section">
+                <div class="row g-4" id="recent-exams-container">
+                    <div class="col-12 text-center text-muted py-4">
+                        <i class="bi bi-hourglass-split"></i> Yükleniyor...
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Görünüm: Tüm Denemeler (Başlangıçta gizli) -->
+        <div id="view-all-container" class="col-12 d-none animation-fade">
+            <div class="all-exams-section">
+                <!-- Filtreler -->
+                <div class="exam-filters mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="filter-exam-type">
+                                <option>Tüm Türler</option>
+                                <option>TYT</option>
+                                <option>AYT</option>
+                                <option>Karma</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="filter-date-from" placeholder="Başlangıç Tarihi">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="filter-date-to" placeholder="Bitiş Tarihi">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="filter-query" placeholder="Deneme ara...">
+                                <button class="btn btn-outline-secondary" type="button" id="filter-search-btn">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deneme Listesi -->
+                <div class="exams-list" id="all-exams-container">
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-hourglass-split"></i> Yükleniyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deneme Analizi (Aynı Sayfada, Sekmeli) -->
+    <div class="row mt-5">
+        <div class="ai-detail-container">
+                <!-- Başlık Bölümü -->
+                <div class="ai-detail-header mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="detail-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div>
+                                <h2 class="detail-title mb-1">Deneme Analizi</h2>
+                                <p class="detail-subtitle mb-0">
+                                    Detaylı deneme analizi ile performansını bu sayfadan inceleyebilirsin
+                                    <span class="ms-2" id="analysis-selected-exam-label"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sekmeli Detaylı Analiz -->
+                <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="genel-tab" data-bs-toggle="tab" data-bs-target="#genel" type="button" role="tab" aria-controls="genel" aria-selected="true">
+                            Genel Görünüm
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ders-tab" data-bs-toggle="tab" data-bs-target="#ders" type="button" role="tab" aria-controls="ders" aria-selected="false">
+                            Ders Bazlı Analiz
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab" aria-controls="ai" aria-selected="false">
+                            AI Önerileri
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-4" id="analysisTabsContent">
+                    <!-- GENEL GÖRÜNÜM -->
+                    <div class="tab-pane fade show active" id="genel" role="tabpanel" aria-labelledby="genel-tab">
+                        <div class="row g-4">
+                            <!-- Son Deneme Skoru -->
+                            <div class="col-lg-4 col-md-6">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-trophy"></i> Son Deneme Net
+                                    </h3>
+                                    <div class="score-display">
+                                        <div class="score-circle">
+                                            <div class="score-inner">
+                                                <h2 class="score-number" id="analysis-last-net">-</h2>
+                                                <p class="score-total">Net</p>
+                                            </div>
+                                        </div>
+                                        <div class="score-trend">
+                                            <span class="trend-badge" id="analysis-last-trend-badge">
+                                                <i class="bi bi-dash"></i> -
+                                            </span>
+                                            <p class="trend-text" id="analysis-last-trend-text">Önceki denemeye göre</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Güçlü Alanlar -->
+                            <div class="col-lg-4 col-md-6">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-target"></i> Güçlü Alanlar
+                                    </h3>
+                                    <div class="strength-display" id="analysis-strength-container">
+                                        <div class="text-muted">Yükleniyor...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Konu Analizi -->
+                            <div class="col-lg-4 col-md-6">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-pie-chart"></i> Konu Analizi
+                                    </h3>
+                                    <div class="subject-stats" id="analysis-topic-container">
+                                        <div class="text-muted">Yükleniyor...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobil uygulamadaki Analiz kartları (Deneme Özeti + Gelişim Analizi) -->
+                        <div class="row g-4 mt-1">
+                            <div class="col-lg-6">
+                                <div class="detail-card mobile-analysis-card">
+                                    <div class="mobile-analysis-card-header">
+                                        <div class="mobile-analysis-icon info">
+                                            <i class="bi bi-bar-chart-line"></i>
+                                        </div>
+                                        <h3 class="mobile-analysis-title">Deneme Özeti</h3>
+                                    </div>
+
+                                    <div class="mobile-analysis-rows">
+                                        <div class="mobile-analysis-row">
+                                            <span class="mobile-analysis-label">Toplam Deneme</span>
+                                            <span class="mobile-analysis-value" id="analysis-total-trials">-</span>
+                                        </div>
+                                        <div class="mobile-analysis-row">
+                                            <span class="mobile-analysis-label">Ortalama Net</span>
+                                            <span class="mobile-analysis-value" id="analysis-average-net">-</span>
+                                        </div>
+                                        <div class="mobile-analysis-row">
+                                            <span class="mobile-analysis-label">En Yüksek Net</span>
+                                            <span class="mobile-analysis-value accent" id="analysis-highest-net">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="detail-card mobile-analysis-card">
+                                    <div class="mobile-analysis-card-header">
+                                        <div class="mobile-analysis-icon success">
+                                            <i class="bi bi-graph-up-arrow"></i>
+                                        </div>
+                                        <h3 class="mobile-analysis-title">Gelişim Analizi</h3>
+                                    </div>
+
+                                    <div class="mobile-growth-metric">
+                                        <span class="mobile-growth-value" id="analysis-first-change">-</span>
+                                        <span class="mobile-growth-unit">net</span>
+                                    </div>
+                                    <div class="mobile-growth-subtitle">İlk denemeye göre değişim</div>
+
+                                    <div class="mobile-growth-message" id="analysis-growth-message">
+                                        <span class="text-muted">Yükleniyor...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performans Analizi -->
+                        <div class="row g-4 mt-1">
+                            <div class="col-lg-12">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-graph-up"></i> Performans Analizi
+                                    </h3>
+                                    <div class="performance-chart" id="analysis-performance-chart">
+                                        <div class="chart-placeholder">
+                                            <i class="bi bi-hourglass-split"></i>
+                                            <p>Yükleniyor...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobilde altta sabit CTA -->
+                        <div class="mobile-sticky-cta d-md-none">
+                            <button type="button"
+                                    class="btn btn-success btn-lg w-100"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#addExamModal">
+                                <i class="bi bi-plus-lg"></i>
+                                Yeni Deneme
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DERS BAZLI ANALİZ -->
+                    <div class="tab-pane fade" id="ders" role="tabpanel" aria-labelledby="ders-tab">
+                        <div class="row g-4">
+                            <div class="col-lg-12">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-clipboard-data"></i> Detaylı Ders Analizi
+                                    </h3>
+                                    <div class="subject-analysis">
+                                        <div class="row g-3" id="analysis-subject-cards">
+                                            <div class="col-12 text-muted text-center py-4">Yükleniyor...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI ÖNERİLERİ -->
+                    <div class="tab-pane fade" id="ai" role="tabpanel" aria-labelledby="ai-tab">
+                        <div class="row g-4">
+                            <div class="col-lg-12">
+                                <div class="detail-card">
+                                    <h3 class="card-section-title">
+                                        <i class="bi bi-lightbulb"></i> AI Önerileri
+                                    </h3>
+                                    <div class="ai-recommendations">
+                                        <div class="recommendation-card">
+                                            <div class="recommendation-icon">
+                                                <i class="bi bi-exclamation-circle"></i>
+                                            </div>
+                                            <div class="recommendation-content">
+                                                <h5>Fizik Konularına Odaklanın</h5>
+                                                <p>Fizik dersinde %45 başarı oranınız var. Mekanik ve elektrik konularına daha fazla çalışma zamanı ayırmanız önerilir.</p>
+                                            </div>
+                                        </div>
+                                        <div class="recommendation-card">
+                                            <div class="recommendation-icon">
+                                                <i class="bi bi-check-circle"></i>
+                                            </div>
+                                            <div class="recommendation-content">
+                                                <h5>Matematik Performansınızı Sürdürün</h5>
+                                                <p>Matematik dersinde gösterdiğiniz %92 başarı oranını koruyarak diğer derslere de zaman ayırabilirsiniz.</p>
+                                            </div>
+                                        </div>
+                                        <div class="recommendation-card">
+                                            <div class="recommendation-icon">
+                                                <i class="bi bi-graph-up"></i>
+                                            </div>
+                                            <div class="recommendation-content">
+                                                <h5>Deneme Sıklığını Artırın</h5>
+                                                <p>Haftada en az 2 deneme sınavı çözerek pratik yapma seviyenizi artırmanız önerilir.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+@* Pomodoro + Leaderboard buradan kaldırıldı (Leaderboard Ana Sayfa'ya taşındı). *@
+
+<!-- Yeni Deneme Sonucu Ekleme Modal -->
+<div class="modal fade" id="addExamModal" tabindex="-1" aria-labelledby="addExamModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content mobile-exam-modal">
+            <div class="modal-header mobile-exam-modal-header">
+                <h5 class="modal-title" id="addExamModalLabel">
+                    <i class="bi bi-plus-circle"></i>
+                    Yeni Deneme Sonucu Ekle
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Exam" asp-action="Create" method="post" id="addExamForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+
+
+                        <div class="col-md-6">
+                            <label asp-for="ExamType" class="form-label">
+                                <i class="bi bi-tag"></i> Deneme Türü <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="ExamType" class="form-select" id="ExamType">
+                                <option value="">Seçiniz...</option>
+                                <option value="TYT">TYT</option>
+                                <option value="AYT">AYT</option>
+                            </select>
+                            <span asp-validation-for="ExamType" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ExamDate" class="form-label">
+                                <i class="bi bi-calendar"></i> Deneme Tarihi <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ExamDate"
+                                   type="date"
+                                   class="form-control"
+                                   asp-format="{0:yyyy-MM-dd}" />
+                            <span asp-validation-for="ExamDate" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="Name" class="form-label">
+                                <i class="bi bi-pencil"></i> Deneme Adı
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Örn: TYT Deneme #15" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="DurationMinutes" class="form-label">
+                                <i class="bi bi-clock"></i> Süre (dakika)
+                            </label>
+                            <input asp-for="DurationMinutes" class="form-control" type="number" min="0" placeholder="165" />
+                            <span asp-validation-for="DurationMinutes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <hr />
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-calculator"></i> Net Sayıları
+                                    </h6>
+                                    <p class="text-muted small mb-0">Deneme türünü seçince dersler otomatik gelir.</p>
+                                </div>
+                                <div class="text-muted small d-none d-md-block">Doğru / Yanlış</div>
+                            </div>
+
+                            <div id="subjectScoresContainer" class="mobile-subject-list">
+                                <div class="text-muted small">Deneme türü seçiniz...</div>
+                            </div>
+                            <span asp-validation-for="SubjectScores" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Notes" class="form-label">
+                                <i class="bi bi-sticky"></i> Notlar
+                            </label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Bu deneme hakkında notlarınızı buraya yazabilirsiniz..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer mobile-exam-modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> İptal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+<script>
+        (() => {
+            const container = document.getElementById('subjectScoresContainer');
+            const examTypeEl = document.getElementById('ExamType');
+            const form = document.getElementById('addExamForm');
+            const modalEl = document.getElementById('addExamModal');
+            if (!container || !examTypeEl || !form) return;
+
+            const safeHtml = window.AppUtils?.safeHtml ?? ((value) => String(value ?? ''));
+
+            const clampInt = (n, min = 0, max = 999) => {
+                const x = Number(n);
+                if (Number.isNaN(x)) return min;
+                return Math.max(min, Math.min(max, Math.trunc(x)));
+            };
+
+            const computeEmpty = (maxQ, correct, wrong) => {
+                if (!maxQ || Number.isNaN(maxQ)) return 0;
+                return Math.max(0, maxQ - (correct + wrong));
+            };
+
+            const renderSubjects = (subjects) => {
+                if (!subjects || !subjects.length) {
+                    container.innerHTML = `<div class="text-muted small">Bu deneme türü için ders bulunamadı.</div>`;
+                    return;
+                }
+
+                container.innerHTML = subjects.map((s, idx) => {
+                    const id = s.Id ?? s.id;
+                    const name = s.Name ?? s.name;
+                    const shortName = s.ShortName ?? s.shortName;
+                    const colorHex = s.ColorHex ?? s.colorHex;
+                    const maxQ = s.MaxQuestions ?? s.maxQuestions ?? null;
+                    const bg = colorHex ? `background:${safeHtml(colorHex)}22;border-color:${safeHtml(colorHex)}33;` : '';
+                    const fg = colorHex ? `color:${safeHtml(colorHex)};` : '';
+
+                    return `
+                        <div class="mobile-subject-row" data-index="${idx}" data-maxq="${maxQ ?? ''}">
+                            <input type="hidden" name="SubjectScores[${idx}].SubjectId" value="${id}" />
+                            <input type="hidden" name="SubjectScores[${idx}].EmptyAnswers" value="0" class="js-empty" />
+                            <div class="mobile-subject-icon" style="${bg}">
+                                <span style="${fg}">${safeHtml(shortName || (name || '').slice(0, 3).toUpperCase())}</span>
+                            </div>
+                            <div class="mobile-subject-main">
+                                <div class="mobile-subject-title">${safeHtml(name)}</div>
+                                <div class="mobile-subject-inputs">
+                                    <input class="form-control form-control-sm js-correct" name="SubjectScores[${idx}].CorrectAnswers" type="number" min="0" max="${maxQ ?? 999}" value="0" inputmode="numeric" placeholder="D" required />
+                                    <input class="form-control form-control-sm js-wrong" name="SubjectScores[${idx}].WrongAnswers" type="number" min="0" max="${maxQ ?? 999}" value="0" inputmode="numeric" placeholder="Y" required />
+                                    <div class="mobile-subject-max text-muted small">${maxQ ? `/${maxQ}` : ''}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            const applyEmptyCalculations = () => {
+                container.querySelectorAll('.mobile-subject-row').forEach(row => {
+                    const maxQ = Number(row.dataset.maxq || 0);
+                    const correctEl = row.querySelector('.js-correct');
+                    const wrongEl = row.querySelector('.js-wrong');
+                    const emptyEl = row.querySelector('.js-empty');
+                    if (!correctEl || !wrongEl || !emptyEl) return;
+
+                    const correct = clampInt(correctEl.value, 0, maxQ || 999);
+                    const wrong = clampInt(wrongEl.value, 0, maxQ || 999);
+                    correctEl.value = String(correct);
+                    wrongEl.value = String(wrong);
+                    emptyEl.value = String(computeEmpty(maxQ, correct, wrong));
+                });
+            };
+
+            container.addEventListener('input', (e) => {
+                const t = e.target;
+                if (!t?.classList?.contains('js-correct') && !t?.classList?.contains('js-wrong')) return;
+                applyEmptyCalculations();
+            });
+
+            const loadSubjects = async (examType) => {
+                if (!examType) {
+                    container.innerHTML = `<div class="text-muted small">Deneme türü seçiniz...</div>`;
+                    return;
+                }
+                container.innerHTML = `<div class="text-muted small">Dersler yükleniyor...</div>`;
+                try {
+                    const res = await fetch(`/Exam/Subjects?examType=${encodeURIComponent(examType)}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const subjects = await res.json();
+                    const active = (subjects || []).filter(s => (s.IsActive ?? s.isActive ?? true) === true);
+                    renderSubjects(active);
+                    applyEmptyCalculations();
+                } catch (err) {
+                    console.error('Ders listesi alınamadı', err);
+                    container.innerHTML = `<div class="text-danger small">Dersler yüklenemedi.</div>`;
+                }
+            };
+
+            examTypeEl.addEventListener('change', () => loadSubjects(examTypeEl.value));
+
+            modalEl?.addEventListener('shown.bs.modal', () => {
+                if (examTypeEl.value) loadSubjects(examTypeEl.value);
+            });
+
+            form.addEventListener('submit', () => {
+                applyEmptyCalculations();
+            });
+
+            const examDateInput = document.getElementById('ExamDate');
+            if (examDateInput && !examDateInput.value) {
+                examDateInput.value = new Date().toISOString().split('T')[0];
+            }
+        })();
+
+        // Exam Listesi ve İstatistikler
+        (() => {
+            const safeHtml = window.AppUtils?.safeHtml ?? ((value) => String(value ?? ''));
+            const fetchJson = window.AppUtils?.fetchJson ?? (async (url) => {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            });
+
+            const fmtDate = (dateStr) => {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                if (Number.isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+            };
+
+            const fmtNet = (value) => {
+                const n = Number(value);
+                if (Number.isNaN(n)) return '-';
+                return n.toFixed(1);
+            };
+
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
+            const renderExamStats = (stats) => {
+                if (!stats) return;
+                const totalEl = document.getElementById('stat-total-exams');
+                const avgEl = document.getElementById('stat-average-net');
+                const highestEl = document.getElementById('stat-highest-net');
+                const changeEl = document.getElementById('stat-last-change');
+
+                // Property isimlerini kontrol et (camelCase veya PascalCase)
+                const totalTrials = stats.totalTrials || stats.TotalTrials || 0;
+                const averageNet = stats.averageNet || stats.AverageNet;
+                const highestNet = stats.highestNet || stats.HighestNet;
+                const lastChange = stats.lastChange !== undefined ? stats.lastChange : (stats.LastChange !== undefined ? stats.LastChange : null);
+
+                if (totalEl) totalEl.textContent = totalTrials;
+                if (avgEl) avgEl.textContent = averageNet ? averageNet.toFixed(1) : '-';
+                if (highestEl) highestEl.textContent = highestNet ? highestNet.toFixed(1) : '-';
+                if (changeEl) {
+                    if (lastChange !== null && lastChange !== undefined) {
+                        const change = lastChange >= 0 ? `+${lastChange.toFixed(1)}` : lastChange.toFixed(1);
+                        changeEl.textContent = change;
+                        const parentCard = changeEl.closest('.stat-card');
+                        if (parentCard) {
+                            parentCard.classList.toggle('text-success', lastChange > 0);
+                            parentCard.classList.toggle('text-danger', lastChange < 0);
+                        }
+                    } else {
+                        changeEl.textContent = '-';
+                    }
+                }
+            };
+
+            const renderMobileAnalysisCards = (stats, trials, selectedExamId = null) => {
+                if (!stats && (!trials || !trials.length)) return;
+
+                const ctx = buildExamContext(trials, selectedExamId);
+                const selectedExamType = ctx.selectedTypeUpper;
+                const sameTypeTrials = ctx.sameTypeAsc;
+
+                const totalTrials = ctx.stats.totalTrials;
+                const averageNet = ctx.stats.averageNet;
+                const highestNet = ctx.stats.highestNet;
+
+                setText('analysis-total-trials', totalTrials ? String(totalTrials) : '-');
+                setText('analysis-average-net', averageNet !== null && averageNet !== undefined ? fmtNet(averageNet) : '-');
+                setText('analysis-highest-net', highestNet !== null && highestNet !== undefined ? fmtNet(highestNet) : '-');
+
+                const messageEl = document.getElementById('analysis-growth-message');
+                const changeEl = document.getElementById('analysis-first-change');
+                if (!messageEl || !changeEl) return;
+
+                if (!sameTypeTrials || sameTypeTrials.length < 2) {
+                    changeEl.textContent = '-';
+                    messageEl.classList.remove('positive', 'negative', 'neutral');
+                    const examTypeText = selectedExamType ? `${selectedExamType} ` : '';
+                    messageEl.innerHTML = `<span class="text-muted">${examTypeText}için en az 2 deneme eklediğinde gelişimini burada göreceksin.</span>`;
+                    return;
+                }
+
+                const delta = ctx.firstLastDelta;
+                if (delta === null || delta === undefined || Number.isNaN(delta)) {
+                    changeEl.textContent = '-';
+                    messageEl.innerHTML = `<span class="text-muted">Deneme tarihleri okunamadı. Lütfen kayıtlarını kontrol et.</span>`;
+                    return;
+                }
+
+                const deltaText = (delta >= 0 ? '+' : '') + fmtNet(delta);
+                changeEl.textContent = deltaText;
+
+                // Renk durumu
+                changeEl.classList.toggle('negative', delta < 0);
+                changeEl.classList.toggle('neutral', delta === 0);
+                messageEl.classList.toggle('positive', delta > 0);
+                messageEl.classList.toggle('negative', delta < 0);
+                messageEl.classList.toggle('neutral', delta === 0);
+
+                if (delta > 0) {
+                    messageEl.innerHTML = `<span class="mobile-growth-message-text">Tebrikler! İlk denemenize göre <strong>${fmtNet(delta)}</strong> net artış gösterdiniz.</span>`;
+                } else if (delta < 0) {
+                    messageEl.innerHTML = `<span class="mobile-growth-message-text">İlk denemenize göre <strong>${fmtNet(Math.abs(delta))}</strong> net düşüş var. Düzenli tekrarlarla toparlayabilirsin.</span>`;
+                } else {
+                    messageEl.innerHTML = `<span class="mobile-growth-message-text">Harika! İlk denemenizle aynı seviyedesiniz. Devam!</span>`;
+                }
+            };
+
+            const getExamBadgeClass = (examTypeUpper) => {
+                if (examTypeUpper === 'TYT') return 'bg-primary';
+                if (examTypeUpper === 'AYT') return 'bg-success';
+                return 'bg-secondary';
+            };
+
+            // Tek noktadan: normalize + seçili sınav + aynı tür serisi + delta + stats üretir
+            const buildExamContext = (exams, selectedExamId = null, forcedExamTypeUpper = null) => {
+                const normalizedAsc = (exams || [])
+                    .map((exam) => {
+                        const id = Number(exam?.id || exam?.Id);
+                        const examTypeUpper = (exam?.examTypeUpper || exam?.examType || exam?.ExamType || '')
+                            .toString()
+                            .trim()
+                            .toUpperCase();
+                        const examDateRaw = (exam?.examDate ?? exam?.ExamDate ?? exam?.date ?? exam?.Date);
+                        const examDate = examDateRaw instanceof Date ? examDateRaw : new Date(examDateRaw);
+                        const name = (exam?.name || exam?.Name || 'İsimsiz Deneme').toString();
+                        const totalNet = Number(exam?.totalNet ?? exam?.TotalNet ?? 0);
+
+                        return {
+                            id,
+                            examTypeUpper,
+                            examDate,
+                            name,
+                            totalNet: Number.isNaN(totalNet) ? 0 : totalNet,
+                            raw: exam
+                        };
+                    })
+                    .filter(x => x.id && !Number.isNaN(x.examDate.getTime()))
+                    .sort((a, b) => a.examDate - b.examDate); // eski -> yeni
+
+                const normalizedDesc = [...normalizedAsc].sort((a, b) => b.examDate - a.examDate);
+
+                // Delta map: her id için, aynı türdeki bir önceki sınava göre değişim
+                const deltaById = new Map();
+                const lastByType = new Map();
+                for (const x of normalizedAsc) {
+                    const t = (x.examTypeUpper || '').toString().toUpperCase();
+                    const prev = lastByType.get(t) || null;
+                    deltaById.set(x.id, prev ? (x.totalNet - prev.totalNet) : null);
+                    lastByType.set(t, x);
+                }
+
+                if (!normalizedAsc.length) {
+                    return {
+                        normalizedAsc,
+                        normalizedDesc,
+                        deltaById,
+                        selected: null,
+                        selectedTypeUpper: null,
+                        sameTypeAsc: [],
+                        prevSameType: null,
+                        stats: { totalTrials: 0, averageNet: null, highestNet: null, lastChange: null, lastTrialDate: null },
+                        firstLastDelta: null
+                    };
+                }
+
+                const selectedIdNum = selectedExamId ? Number(selectedExamId) : null;
+                const selectedAny = selectedIdNum
+                    ? normalizedAsc.find(x => x.id === selectedIdNum)
+                    : normalizedAsc[normalizedAsc.length - 1];
+
+                const selectedTypeUpper = forcedExamTypeUpper
+                    ? forcedExamTypeUpper.toString().trim().toUpperCase()
+                    : (selectedAny?.examTypeUpper || null);
+
+                const sameTypeAsc = selectedTypeUpper
+                    ? normalizedAsc.filter(x => x.examTypeUpper === selectedTypeUpper)
+                    : normalizedAsc;
+
+                const selected = selectedIdNum
+                    ? sameTypeAsc.find(x => x.id === selectedIdNum) || selectedAny
+                    : (sameTypeAsc.length ? sameTypeAsc[sameTypeAsc.length - 1] : selectedAny);
+
+                const idx = selected ? sameTypeAsc.findIndex(x => x.id === selected.id) : -1;
+                const prevSameType = idx > 0 ? sameTypeAsc[idx - 1] : null;
+
+                const totalTrials = sameTypeAsc.length;
+                const sum = sameTypeAsc.reduce((acc, x) => acc + (Number(x.totalNet) || 0), 0);
+                const averageNet = totalTrials ? (sum / totalTrials) : null;
+                const highestNet = totalTrials ? Math.max(...sameTypeAsc.map(x => Number(x.totalNet) || 0)) : null;
+                const lastChange = totalTrials >= 2
+                    ? (sameTypeAsc[totalTrials - 1].totalNet - sameTypeAsc[totalTrials - 2].totalNet)
+                    : null;
+                const lastTrialDate = totalTrials ? sameTypeAsc[totalTrials - 1].examDate : null;
+                const firstLastDelta = totalTrials >= 2 ? (sameTypeAsc[totalTrials - 1].totalNet - sameTypeAsc[0].totalNet) : null;
+
+                return {
+                    normalizedAsc,
+                    normalizedDesc,
+                    deltaById,
+                    selected,
+                    selectedTypeUpper,
+                    sameTypeAsc,
+                    prevSameType,
+                    stats: { totalTrials, averageNet, highestNet, lastChange, lastTrialDate },
+                    firstLastDelta
+                };
+            };
+
+            const renderRecentExams = (exams) => {
+                const container = document.getElementById('recent-exams-container');
+                if (!container) return;
+
+                if (!exams || !exams.length) {
+                    container.innerHTML = '<div class="col-12 text-center text-muted py-4">Henüz deneme kaydı yok</div>';
+                    return;
+                }
+
+                const ctx = buildExamContext(exams);
+                const deltaById = ctx.deltaById;
+                const sortedDesc = ctx.normalizedDesc;
+
+                container.innerHTML = sortedDesc.slice(0, 3).map(x => {
+                    const examTypeUpper = x.examTypeUpper;
+                    const badgeClass = getExamBadgeClass(examTypeUpper);
+                    const delta = deltaById.get(x.id);
+                    return `
+                    <div class="col-lg-4 col-md-6">
+                        <div class="exam-card recent-exam">
+                            <div class="exam-header">
+                                <div class="exam-type">
+                                    <span class="badge ${badgeClass}">${examTypeUpper || '-'}</span>
+                                </div>
+                                <div class="exam-date">
+                                    <i class="bi bi-calendar"></i>
+                                    <span>${fmtDate(x.examDate)}</span>
+                                </div>
+                            </div>
+                            <div class="exam-content">
+                                <h4>${safeHtml(x.name)}</h4>
+                                <div class="exam-score">
+                                    <div class="score-circle">
+                                        <span class="score-number">${fmtNet(x.totalNet)}</span>
+                                        <span class="score-label">Net</span>
+                                    </div>
+                                </div>
+                                ${delta !== null && delta !== undefined && !Number.isNaN(delta) ? `
+                                    <div class="text-center mt-2">
+                                        <small class="${delta >= 0 ? 'text-success' : 'text-danger'}">
+                                            ${delta >= 0 ? '+' : ''}${fmtNet(delta)} değişim
+                                        </small>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            };
+
+            const renderAllExams = (exams) => {
+                const container = document.getElementById('all-exams-container');
+                if (!container) return;
+
+                if (!exams || !exams.length) {
+                    container.innerHTML = '<div class="text-center text-muted py-4">Henüz deneme kaydı yok</div>';
+                    return;
+                }
+
+                const ctx = buildExamContext(exams);
+                const deltaById = ctx.deltaById;
+                const sortedDesc = ctx.normalizedDesc;
+
+                container.innerHTML = sortedDesc.map(x => {
+                    const examTypeUpper = x.examTypeUpper;
+                    const badgeClass = getExamBadgeClass(examTypeUpper);
+                    const delta = deltaById.get(x.id);
+                    return `
+                    <div class="exam-item exam-item-clickable" role="button" tabindex="0" data-exam-id="${x.id}">
+                        <div class="exam-item-header">
+                            <div class="exam-item-type">
+                                <span class="badge ${badgeClass}">${examTypeUpper || '-'}</span>
+                            </div>
+                            <div class="exam-item-info">
+                                <h5>${safeHtml(x.name)}</h5>
+                                <p class="exam-item-date">${fmtDate(x.examDate)}</p>
+                            </div>
+                            <div class="exam-item-score">
+                                <span class="score-badge">${fmtNet(x.totalNet)} Net</span>
+                                ${delta !== null && delta !== undefined && !Number.isNaN(delta) ? `
+                                    <small class="${delta >= 0 ? 'text-success' : 'text-danger'} ms-2">
+                                        ${delta >= 0 ? '+' : ''}${fmtNet(delta)}
+                                    </small>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="exam-item-actions justify-content-end">
+                            <button type="button" class="btn btn-outline-primary btn-sm js-analyze-exam" data-exam-id="${x.id}">
+                                <i class="bi bi-graph-up"></i> Analiz Et
+                            </button>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            };
+
+            const clamp01 = (n) => Math.min(1, Math.max(0, n));
+
+            const percentFromSubject = (s) => {
+                const correct = Number(s.correctAnswers ?? s.CorrectAnswers ?? 0);
+                const wrong = Number(s.wrongAnswers ?? s.WrongAnswers ?? 0);
+                const empty = Number(s.emptyAnswers ?? s.EmptyAnswers ?? 0);
+                const totalQ = correct + wrong + empty;
+                const net = Number(s.netScore ?? s.NetScore ?? 0);
+                if (!totalQ || Number.isNaN(totalQ) || Number.isNaN(net)) return 0;
+                // net / soru sayısı => 0..1 ölçeği
+                const p = net / totalQ;
+                return Math.round(clamp01(p) * 100);
+            };
+
+            const colorClasses = ['math', 'turkish', 'history', 'physics', 'chemistry', 'biology'];
+
+            const renderStrengthAndImprovement = (detail) => {
+                const strengthEl = document.getElementById('analysis-strength-container');
+                const topicEl = document.getElementById('analysis-topic-container');
+                if (!strengthEl || !topicEl) return;
+
+                const subs = (detail?.subjectScores || detail?.SubjectScores || []).map((s, idx) => {
+                    const name = s.subjectName || s.SubjectName || s.subjectShortName || s.SubjectShortName || `Ders ${idx + 1}`;
+                    const pct = percentFromSubject(s);
+                    const net = Number(s.netScore ?? s.NetScore ?? 0);
+                    return { name, pct, net, idx };
+                });
+
+                if (!subs.length) {
+                    strengthEl.innerHTML = `<div class="text-muted">Ders verisi bulunamadı.</div>`;
+                    topicEl.innerHTML = `<div class="text-muted">Ders verisi bulunamadı.</div>`;
+                    return;
+                }
+
+                const sortedDesc = [...subs].sort((a, b) => b.pct - a.pct);
+                const strengthTop = sortedDesc.slice(0, 3);
+
+                const strengthHtml = strengthTop.map((x, i) => {
+                    const cls = colorClasses[i % colorClasses.length];
+                    return `
+                        <div class="strength-item">
+                            <div class="strength-header">
+                                <span class="strength-subject">${safeHtml(x.name)}</span>
+                                <span class="strength-percent">%${x.pct}</span>
+                            </div>
+                            <div class="strength-bar-container">
+                                <div class="strength-bar ${cls}" style="width: ${x.pct}%"></div>
+                            </div>
+                        </div>`;
+                }).join('');
+                strengthEl.innerHTML = strengthHtml;
+
+                // Konu Analizi: tüm dersler (en iyi üstte), yüzde + bar, %0 olanları filtrele
+                const filteredTopics = sortedDesc.filter(x => x.pct > 0).slice(0, 8);
+                const topicHtml = filteredTopics.length > 0 
+                    ? filteredTopics.map((x, i) => {
+                        const pct = x.pct;
+                        const barCls = ['bg-primary', 'bg-success', 'bg-info', 'bg-warning', 'bg-danger'][i % 5];
+                        return `
+                            <div class="subject-item">
+                                <div class="subject-info">
+                                    <span class="subject-name">${safeHtml(x.name)}</span>
+                                    <span class="subject-score">${pct}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar ${barCls}" style="width: ${pct}%"></div>
+                                </div>
+                            </div>`;
+                    }).join('')
+                    : '<div class="text-muted">Gösterilecek ders bulunamadı.</div>';
+                topicEl.innerHTML = topicHtml;
+            };
+
+            const renderLastNetCard = (trials, selectedExamId = null) => {
+                const lastNetEl = document.getElementById('analysis-last-net');
+                const badgeEl = document.getElementById('analysis-last-trend-badge');
+                const textEl = document.getElementById('analysis-last-trend-text');
+                if (!lastNetEl || !badgeEl || !textEl) return;
+
+                const ctx = buildExamContext(trials, selectedExamId);
+
+                if (!ctx.selected) {
+                    lastNetEl.textContent = '-';
+                    badgeEl.className = 'trend-badge';
+                    badgeEl.innerHTML = `<i class="bi bi-dash"></i> -`;
+                    textEl.textContent = 'Önceki denemeye göre';
+                    return;
+                }
+
+                lastNetEl.textContent = fmtNet(ctx.selected.totalNet);
+                const change = ctx.prevSameType ? (ctx.selected.totalNet - ctx.prevSameType.totalNet) : null;
+
+                badgeEl.className = 'trend-badge';
+                if (change === null || change === undefined || Number.isNaN(change)) {
+                    badgeEl.innerHTML = `<i class="bi bi-dash"></i> -`;
+                    if (ctx.selectedTypeUpper) textEl.textContent = `Önceki ${ctx.selectedTypeUpper} deneme yok`;
+                    else textEl.textContent = 'Önceki deneme yok';
+                    return;
+                }
+
+                const up = change > 0;
+                const down = change < 0;
+                if (up) badgeEl.classList.add('up');
+                if (down) badgeEl.classList.add('down');
+                const icon = up ? 'bi-arrow-up' : down ? 'bi-arrow-down' : 'bi-dash';
+                const sign = change > 0 ? '+' : '';
+                badgeEl.innerHTML = `<i class="bi ${icon}"></i> ${sign}${fmtNet(change)} net`;
+                textEl.textContent = ctx.selectedTypeUpper ? `Önceki ${ctx.selectedTypeUpper} denemeye göre` : 'Önceki denemeye göre';
+            };
+
+            const renderPerformanceChart = (trials, selectedExamId = null) => {
+                const container = document.getElementById('analysis-performance-chart');
+                if (!container) return;
+
+                const ctx = buildExamContext(trials, selectedExamId);
+
+                if (!ctx.selected) {
+                    container.innerHTML = `
+                        <div class="chart-placeholder">
+                            <i class="bi bi-activity"></i>
+                            <p>Grafik için deneme gerekiyor</p>
+                        </div>`;
+                    return;
+                }
+
+                const selectedExamType = ctx.selectedTypeUpper || '';
+                const sameTypeExams = ctx.sameTypeAsc;
+
+                if (sameTypeExams.length < 2) {
+                    container.innerHTML = `
+                        <div class="chart-placeholder">
+                            <i class="bi bi-activity"></i>
+                            <p>${selectedExamType} için en az 2 deneme gerekiyor</p>
+                        </div>`;
+                    return;
+                }
+
+                const points = sameTypeExams
+                    .map(x => ({ d: x.examDate, y: Number(x.totalNet) || 0 }))
+                    .filter(p => !Number.isNaN(p.d.getTime()));
+
+                if (points.length < 2) return;
+                points.sort((a, b) => a.d - b.d);
+
+                const ys = points.map(p => p.y);
+                const yMin = Math.min(...ys);
+                const yMax = Math.max(...ys);
+                const pad = (yMax - yMin) * 0.15 || 1;
+                const min = yMin - pad;
+                const max = yMax + pad;
+
+                const W = 360;
+                const H = 200;
+                const left = 12;
+                const right = 12;
+                const top = 12;
+                const bottom = 24;
+                const innerW = W - left - right;
+                const innerH = H - top - bottom;
+
+                const toX = (i) => left + (innerW * (i / (points.length - 1)));
+                const toY = (y) => top + innerH * (1 - clamp01((y - min) / (max - min)));
+
+                const poly = points.map((p, i) => `${toX(i).toFixed(1)},${toY(p.y).toFixed(1)}`).join(' ');
+                const area = `${left},${top + innerH} ` + poly + ` ${left + innerW},${top + innerH}`;
+
+                const last = points[points.length - 1];
+                const first = points[0];
+
+                container.innerHTML = `
+                    <div class="analysis-chart-wrap">
+                        <svg viewBox="0 0 ${W} ${H}" class="analysis-line-chart" preserveAspectRatio="none" aria-label="Net gelişimi">
+                            <defs>
+                                <linearGradient id="analysisAreaFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="rgba(34,197,94,.35)"/>
+                                    <stop offset="100%" stop-color="rgba(34,197,94,0)"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M ${area}" fill="url(#analysisAreaFill)"></path>
+                            <polyline points="${poly}" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            ${points.map((p, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(p.y).toFixed(1)}" r="${i === points.length - 1 ? 5 : 4}" fill="#16a34a" stroke="#fff" stroke-width="2"></circle>`).join('')}
+                        </svg>
+                        <div class="analysis-chart-meta">
+                            <div><strong>${fmtNet(first.y)}</strong> → <strong>${fmtNet(last.y)}</strong> net</div>
+                            <div class="text-muted small">${selectedExamType} - ${first.d.toLocaleDateString('tr-TR')} - ${last.d.toLocaleDateString('tr-TR')}</div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const renderSubjectCards = (lastDetail, prevDetail, examType = null) => {
+                const container = document.getElementById('analysis-subject-cards');
+                if (!container) return;
+
+                const allScores = (lastDetail?.subjectScores || lastDetail?.SubjectScores || []);
+                // Hiç soru çözülmeyen (Doğru+Yanlış=0) dersleri gizle
+                const lastScores = (allScores || []).filter(s => {
+                    const correct = Number(s.correctAnswers ?? s.CorrectAnswers ?? 0);
+                    const wrong = Number(s.wrongAnswers ?? s.WrongAnswers ?? 0);
+                    return (correct + wrong) > 0;
+                });
+
+                if (!lastScores.length) {
+                    container.innerHTML = `<div class="col-12 text-muted text-center py-4">Ders detayı bulunamadı.</div>`;
+                    return;
+                }
+
+                const prevMap = new Map();
+                const prevScores = (prevDetail?.subjectScores || prevDetail?.SubjectScores || []);
+                prevScores.forEach(s => {
+                    const key = (s.subjectId ?? s.SubjectId);
+                    if (key !== null && key !== undefined) prevMap.set(Number(key), s);
+                });
+
+                const examTypeText = examType ? `${examType} ` : '';
+
+                const cards = lastScores.map(s => {
+                    const subjectId = Number(s.subjectId ?? s.SubjectId);
+                    const subjectName = s.subjectName || s.SubjectName || 'Ders';
+                    const correct = Number(s.correctAnswers ?? s.CorrectAnswers ?? 0);
+                    const wrong = Number(s.wrongAnswers ?? s.WrongAnswers ?? 0);
+                    const empty = Number(s.emptyAnswers ?? s.EmptyAnswers ?? 0);
+                    const net = Number(s.netScore ?? s.NetScore ?? 0);
+                    const totalQ = correct + wrong + empty;
+
+                    const prev = prevMap.get(subjectId);
+                    const prevNet = prev ? Number(prev.netScore ?? prev.NetScore ?? 0) : null;
+                    const delta = prevNet !== null && !Number.isNaN(prevNet) ? (net - prevNet) : null;
+
+                    let trendIcon = 'bi-dash text-warning';
+                    let trendText = `Önceki ${examTypeText}denemeye göre aynı`;
+                    if (delta !== null) {
+                        if (delta > 0.01) { trendIcon = 'bi-arrow-up text-success'; trendText = `Önceki ${examTypeText}denemeye göre +${fmtNet(delta)} net`; }
+                        else if (delta < -0.01) { trendIcon = 'bi-arrow-down text-danger'; trendText = `Önceki ${examTypeText}denemeye göre ${fmtNet(delta)} net`; }
+                        else { trendIcon = 'bi-dash text-warning'; trendText = `Önceki ${examTypeText}denemeye göre aynı`; }
+                    } else {
+                        trendIcon = 'bi-dash text-muted';
+                        trendText = `Önceki ${examTypeText}deneme yok`;
+                    }
+
+                    return `
+                        <div class="col-md-4 col-sm-6">
+                            <div class="subject-card">
+                                <div class="subject-header">
+                                    <h5>${safeHtml(subjectName)}</h5>
+                                </div>
+                                <div class="subject-stats">
+                                    <div class="stat-row">
+                                        <span>Doğru:</span>
+                                        <strong>${correct}/${totalQ || '-'}</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Yanlış:</span>
+                                        <strong class="text-danger">${wrong}</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Boş:</span>
+                                        <strong>${empty}</strong>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span>Net:</span>
+                                        <strong>${fmtNet(net)}</strong>
+                                    </div>
+                                </div>
+                                <div class="subject-trend">
+                                    <i class="bi ${trendIcon}"></i>
+                                    <span>${safeHtml(trendText)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = cards;
+            };
+
+            const parseDateOnly = (value) => {
+                if (!value) return null;
+                // input[type=date] => yyyy-MM-dd
+                const d = new Date(value);
+                return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            };
+
+            const normalizeTrialItem = (t) => {
+                const id = Number(t.id || t.Id);
+                const examType = (t.examType || t.ExamType || '').toString();
+                const name = (t.name || t.Name || '').toString();
+                const examDateRaw = t.examDate || t.ExamDate;
+                const examDate = new Date(examDateRaw);
+                const totalNet = Number(t.totalNet ?? t.TotalNet ?? 0);
+                const netChange = (t.netChange !== undefined ? t.netChange : t.NetChange);
+                return {
+                    id,
+                    examType,
+                    name,
+                    examDate,
+                    totalNet: Number.isNaN(totalNet) ? 0 : totalNet,
+                    netChange: netChange !== null && netChange !== undefined ? Number(netChange) : null,
+                    raw: t
+                };
+            };
+
+            const computeStatsFromTrials = (trials, examType = null) => {
+                const ctx = buildExamContext(trials, null, examType);
+                return ctx.stats;
+            };
+
+            const setupFilters = (onChange) => {
+                const typeEl = document.getElementById('filter-exam-type');
+                const fromEl = document.getElementById('filter-date-from');
+                const toEl = document.getElementById('filter-date-to');
+                const qEl = document.getElementById('filter-query');
+                const btn = document.getElementById('filter-search-btn');
+
+                if (!typeEl || !fromEl || !toEl || !qEl) return () => ({});
+
+                let t = null;
+                const debounce = () => {
+                    if (t) window.clearTimeout(t);
+                    t = window.setTimeout(() => onChange?.(), 150);
+                };
+
+                typeEl.addEventListener('change', () => onChange?.());
+                fromEl.addEventListener('change', () => onChange?.());
+                toEl.addEventListener('change', () => onChange?.());
+                qEl.addEventListener('input', debounce);
+                btn?.addEventListener('click', () => onChange?.());
+
+                return () => ({
+                    examType: (typeEl.value || '').trim(),
+                    from: parseDateOnly(fromEl.value),
+                    to: parseDateOnly(toEl.value),
+                    query: (qEl.value || '').trim().toLowerCase()
+                });
+            };
+
+            const loadExams = async () => {
+                try {
+                    let allTrialsRaw = [];
+                    let allTrials = [];
+                    let lastStats = null; // API stats (unfiltered)
+                    let lastDetail = null;
+                    let prevDetail = null;
+                    let lastTrials = [];
+                    let selectedExamId = null;
+
+                    const setSelectedExamLabel = (trial) => {
+                        const el = document.getElementById('analysis-selected-exam-label');
+                        if (!el) return;
+                        if (!trial) {
+                            el.textContent = '';
+                            return;
+                        }
+                        const name = trial.name || trial.Name || 'Deneme';
+                        const examType = trial.examType || trial.ExamType || '';
+                        const dateStr = trial.examDate || trial.ExamDate || '';
+                        el.textContent = `• Seçili: ${name} (${examType}) - ${fmtDate(dateStr)}`;
+                    };
+
+                    const [listRes, statsRes] = await Promise.all([
+                        fetch('/Exam/List'),
+                        fetch('/Exam/Stats')
+                    ]);
+
+                    const applyFiltersAndRender = async () => {
+                        // Filters
+                        const f = getFilters?.() ?? {};
+                        const selectedType = (f.examType || '').toUpperCase();
+                        const from = f.from;
+                        const to = f.to;
+                        const query = f.query || '';
+
+                        const filtered = allTrials.filter(x => {
+                            if (selectedType && selectedType !== 'TÜM TÜRLER' && selectedType !== 'TÜM' && selectedType !== 'ALL') {
+                                if (!x.examType || x.examType.toUpperCase() !== selectedType) return false;
+                            }
+                            if (from) {
+                                const d = new Date(x.examDate.getFullYear(), x.examDate.getMonth(), x.examDate.getDate());
+                                if (d < from) return false;
+                            }
+                            if (to) {
+                                const d = new Date(x.examDate.getFullYear(), x.examDate.getMonth(), x.examDate.getDate());
+                                if (d > to) return false;
+                            }
+                            if (query) {
+                                const hay = `${x.name} ${x.examType}`.toLowerCase();
+                                if (!hay.includes(query)) return false;
+                            }
+                            return true;
+                        });
+
+                        // Tarihe göre sıralı kopya (eski -> yeni). Varsayılan seçim için "en yeni"yi kullanacağız.
+                        const filteredSortedByDate = [...filtered].sort((a, b) => a.examDate - b.examDate);
+                        const fallbackLatest = filteredSortedByDate.length > 0 ? filteredSortedByDate[filteredSortedByDate.length - 1] : null;
+
+                        // Keep “trials” array in original API-ish shape for existing render fns
+                        lastTrials = filtered.map(x => x.raw);
+
+                        renderRecentExams(lastTrials);
+                        renderAllExams(lastTrials);
+                        
+                        // Seçili sınavı belirle veya son sınavı kullan
+                        const currentSelectedTrial = selectedExamId
+                            ? filteredSortedByDate.find(x => x.id === selectedExamId)
+                            : fallbackLatest;
+                        
+                        if (currentSelectedTrial) {
+                            selectedExamId = currentSelectedTrial.id;
+                            renderLastNetCard(lastTrials, selectedExamId);
+                            renderPerformanceChart(lastTrials, selectedExamId);
+                        } else {
+                            renderLastNetCard(lastTrials, null);
+                            renderPerformanceChart(lastTrials, null);
+                        }
+
+                        // Stats cards: filtered stats (more intuitive)
+                        // Seçili sınavın türüne göre istatistikleri hesapla
+                        const selectedExamTypeForStats = currentSelectedTrial?.examType || null;
+                        const computed = computeStatsFromTrials(filtered, selectedExamTypeForStats);
+                        renderExamStats(computed);
+                        
+                        // Seçili sınav ID'sini belirle
+                        const currentSelectedId = selectedExamId || fallbackLatest?.id || null;
+                        renderMobileAnalysisCards(computed, lastTrials, currentSelectedId);
+
+                        // Detail-based sections: last/prev within filtered
+                        if (filtered.length > 0) {
+                            const sorted = filteredSortedByDate;
+                            const selected = selectedExamId ? sorted.find(x => x.id === selectedExamId) : null;
+                            const target = selected ?? sorted[sorted.length - 1];
+                            selectedExamId = target?.id ?? null;
+
+                            // Aynı sınav türündeki sınavları filtrele
+                            const targetExamType = target?.examType?.toUpperCase() || '';
+                            const sameTypeSorted = sorted.filter(x => {
+                                const examType = (x.examType || '').toString().toUpperCase();
+                                return examType === targetExamType;
+                            });
+                            
+                            const targetIndex = sameTypeSorted.findIndex(x => x.id === selectedExamId);
+                            const prev = targetIndex > 0 ? sameTypeSorted[targetIndex - 1] : null;
+
+                            const lastId = target?.id;
+                            const prevId = prev?.id ?? null;
+
+                            try {
+                                const [d1, d0] = await Promise.all([
+                                    lastId ? fetchJson(`/Exam/Detail?id=${lastId}`) : Promise.resolve(null),
+                                    prevId ? fetchJson(`/Exam/Detail?id=${prevId}`) : Promise.resolve(null),
+                                ]);
+                                lastDetail = d1;
+                                prevDetail = d0;
+                                const currentExamType = target?.examType || null;
+                                renderStrengthAndImprovement(lastDetail);
+                                renderSubjectCards(lastDetail, prevDetail, currentExamType);
+
+                                // Seçili etiket + net kartı trendini hedefe göre güncelle
+                                const selectedTrial = lastTrials.find(t => Number(t.id || t.Id) === selectedExamId);
+                                setSelectedExamLabel(selectedTrial);
+                                renderLastNetCard(lastTrials, selectedExamId);
+
+                                // Listede seçili satırı highlight
+                                const listEl = document.getElementById('all-exams-container');
+                                listEl?.querySelectorAll('.exam-item-clickable').forEach(node => {
+                                    const id = Number(node.dataset.examId);
+                                    node.classList.toggle('selected', !!selectedExamId && id === selectedExamId);
+                                });
+                            } catch (err) {
+                                console.error('Filtrelenmiş detay yüklenemedi', err);
+                            }
+                        } else {
+                            setSelectedExamLabel(null);
+                        }
+                    };
+
+                    let getFilters = null;
+                    getFilters = setupFilters(() => applyFiltersAndRender());
+
+                    // Tüm Denemeler listesinden seçim -> Ders Bazlı Analiz'i aktif et
+                    const allList = document.getElementById('all-exams-container');
+                    if (allList) {
+                        const handleSelect = async (id) => {
+                            selectedExamId = id;
+                            await applyFiltersAndRender();
+                            const dersTab = document.getElementById('ders-tab');
+                            dersTab?.click();
+                        };
+
+                        allList.addEventListener('click', (evt) => {
+                            const btn = evt.target.closest('.js-analyze-exam');
+                            const item = evt.target.closest('.exam-item-clickable');
+                            const idAttr = btn?.dataset?.examId || item?.dataset?.examId;
+                            if (!idAttr) return;
+                            const id = Number(idAttr);
+                            if (!id) return;
+                            if (btn) evt.stopPropagation();
+                            handleSelect(id);
+                        });
+
+                        allList.addEventListener('keydown', (evt) => {
+                            if (evt.key !== 'Enter' && evt.key !== ' ') return;
+                            const item = evt.target.closest?.('.exam-item-clickable');
+                            if (!item) return;
+                            evt.preventDefault();
+                            const id = Number(item.dataset.examId);
+                            if (!id) return;
+                            handleSelect(id);
+                        });
+                    }
+
+                    if (listRes.ok) {
+                        const listData = await listRes.json();
+                        // API response formatını kontrol et - TrialExamListResponse
+                        // { trials: [...], stats: {...} } formatında
+                        const trials = listData?.trials || listData?.Trials || [];
+                        allTrialsRaw = trials;
+                        allTrials = allTrialsRaw.map(normalizeTrialItem).filter(x => x.id && !Number.isNaN(x.examDate.getTime()));
+                        await applyFiltersAndRender();
+                    } else {
+                        console.error('Exam listesi yüklenemedi:', listRes.status);
+                    }
+
+                    if (statsRes.ok) {
+                        const stats = await statsRes.json();
+                        lastStats = stats;
+                        // Not: stat kartlarını filtreli hesaplıyoruz. API stats sadece ilk yüklemede referans kalsın.
+                    } else {
+                        console.error('Exam istatistikleri yüklenemedi:', statsRes.status);
+                    }
+                } catch (err) {
+                    console.error('Denemeler yüklenemedi', err);
+                }
+            };
+
+            loadExams();
+        })();
+
+        // View Toggle Logic
+        (() => {
+
+             const recentContainer = document.getElementById('view-recent-container');
+             const allContainer = document.getElementById('view-all-container');
+             const titleText = document.getElementById('main-exam-title-text');
+             const titleIcon = document.getElementById('main-exam-icon');
+
+             const toggleBtns = document.querySelectorAll('.view-toggle-btn');
+             
+             if(!toggleBtns.length || !recentContainer || !allContainer) return;
+
+             toggleBtns.forEach(btn => {
+                 btn.addEventListener('click', () => {
+                     // Update active state
+                     toggleBtns.forEach(b => b.classList.remove('active'));
+                     btn.classList.add('active');
+
+                     const mode = btn.dataset.mode;
+                     if(mode === 'recent') {
+                         recentContainer.classList.remove('d-none');
+                         allContainer.classList.add('d-none');
+                         if(titleText) titleText.textContent = 'Son Denemeler';
+                         if(titleIcon) titleIcon.className = 'bi bi-clock-history';
+                         
+                         // Fade animation reset
+                         recentContainer.classList.remove('animation-fade');
+                         void recentContainer.offsetWidth; // trigger reflow
+                         recentContainer.classList.add('animation-fade');
+                     } else {
+                         recentContainer.classList.add('d-none');
+                         allContainer.classList.remove('d-none');
+                         if(titleText) titleText.textContent = 'Tüm Denemeler';
+                         if(titleIcon) titleIcon.className = 'bi bi-list-ul';
+                         
+                         // Fade animation reset
+                         allContainer.classList.remove('animation-fade');
+                         void allContainer.offsetWidth; // trigger reflow
+                         allContainer.classList.add('animation-fade');
+                     }
+                 });
+             });
+        })();
+</script>
+}

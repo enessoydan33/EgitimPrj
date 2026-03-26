@@ -1,0 +1,411 @@
+@{
+    ViewData["Title"] = "Duyuru Gönder";
+}
+
+<div class="teacher-announce-container fade-in-up mt-5">
+
+    <!-- ===== HEADER ===== -->
+    <div class="modern-page-header header-announce">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-megaphone-fill"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Duyuru Gönder</h1>
+                <p>Sınıflarınıza veya tekil öğrencilere duyuru ve bilgi gönderin.</p>
+            </div>
+        </div>
+        <div class="modern-header-actions">
+            <a asp-action="TeacherPanel" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Panele Dön
+            </a>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-4">
+        <!-- SOL: Duyuru Formu -->
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="icon-box icon-box-info">
+                        <i class="bi bi-megaphone"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Yeni Duyuru</h5>
+                        <p class="text-muted small mb-0">Formu doldurarak duyuru gönderin</p>
+                    </div>
+                </div>
+
+                <form id="announce-form">
+                    <!-- Hedef -->
+                    <div class="mb-3">
+                        <label class="form-label-modern">Gönderim Hedefi</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="target-btn active flex-fill" data-target="class">
+                                <i class="bi bi-people me-1"></i>Sınıf Geneli
+                            </button>
+                            <button type="button" class="target-btn flex-fill" data-target="individual">
+                                <i class="bi bi-person me-1"></i>Tekil Öğrenci
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sınıf seçimi -->
+                    <div class="mb-3" id="ann-class-row">
+                        <label class="form-label-modern">Sınıf</label>
+                        <select class="form-select form-select-modern" id="ann-class">
+                            <option value="10A">10-A Sınıfı</option>
+                            <option value="10B">10-B Sınıfı</option>
+                            <option value="11A">11-A Sınıfı</option>
+                            <option value="11B">11-B Sınıfı</option>
+                            <option value="12A">12-A Sınıfı</option>
+                        </select>
+                    </div>
+
+                    <!-- Tekil öğrenci seçimi -->
+                    <div class="mb-3 d-none" id="ann-student-row">
+                        <label class="form-label-modern">Öğrenci</label>
+                        <select class="form-select form-select-modern" id="ann-student">
+                            <option value="">Öğrenci seçin...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-modern">Başlık</label>
+                        <input type="text" class="form-control form-control-modern" id="ann-title"
+                               placeholder="Duyuru başlığı..." required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label-modern">Mesaj İçeriği</label>
+                        <textarea class="form-control form-control-modern" id="ann-content"
+                                  rows="4" placeholder="Mesajı buraya yazın..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-gradient-info w-100 fw-bold py-3">
+                        <i class="bi bi-megaphone-fill me-2"></i>Duyuruyu Gönder
+                    </button>
+                    <div id="ann-feedback" class="mt-3 text-center fw-medium d-none"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ALT: Gönderilen Duyurular -->
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-box icon-box-info">
+                            <i class="bi bi-list-task"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Gönderilen Duyurular</h5>
+                            <p class="text-muted small mb-0">Tüm duyurularınız</p>
+                        </div>
+                    </div>
+                    <span class="badge bg-info rounded-pill px-3 py-2" id="sent-count">0 Kayıt</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table sent-table" id="sent-table">
+                        <thead>
+                            <tr>
+                                <th>Hedef</th>
+                                <th>Başlık</th>
+                                <th>İçerik</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sent-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center py-5 text-muted" id="sent-empty">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                    <p>Henüz gönderilen bir duyuru yok.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Styles {
+<style>
+    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    @@keyframes fadeInUp {
+        from { opacity:0; transform:translateY(20px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .header-announce { background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%); }
+
+    .glass-card {
+        background:#fff; border-radius:24px;
+        border:1px solid rgba(226,232,240,.8);
+        box-shadow:0 10px 30px rgba(0,0,0,.03);
+        transition:transform .3s,box-shadow .3s;
+    }
+    .glass-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,.06); }
+
+    .icon-box-info {
+        width:44px; height:44px; background:#e0f2fe; color:#0284c7;
+        border-radius:12px; display:flex; align-items:center;
+        justify-content:center; font-size:1.1rem; flex-shrink:0;
+    }
+
+    .form-label-modern {
+        font-size:.8rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:#64748b; margin-bottom:.4rem; display:block;
+    }
+    .form-control-modern, .form-select-modern {
+        border:2px solid #e2e8f0; border-radius:12px;
+        padding:.7rem 1rem; font-size:.95rem; color:#1e293b;
+        background:#f8fafc; transition:all .3s;
+    }
+    .form-control-modern:focus, .form-select-modern:focus {
+        background:#fff; border-color:#0ea5e9;
+        box-shadow:0 0 0 4px rgba(14,165,233,.1); outline:none;
+    }
+
+    .target-btn {
+        border:2px solid #e2e8f0; border-radius:12px;
+        background:#f8fafc; color:#64748b; padding:.6rem .75rem;
+        font-size:.85rem; font-weight:600; cursor:pointer;
+        transition:all .2s;
+    }
+    .target-btn.active {
+        border-color:#0ea5e9; background:#e0f2fe; color:#0284c7;
+    }
+    .target-btn:hover:not(.active) { border-color:#bae6fd; background:#f0f9ff; }
+
+    .btn-gradient-info {
+        background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);
+        border:none; color:#fff; border-radius:12px;
+        font-size:.95rem; letter-spacing:.5px;
+        transition:filter .3s,transform .2s;
+    }
+    .btn-gradient-info:hover { filter:brightness(110%); transform:translateY(-2px); color:#fff; }
+
+    /* ===== SENT TABLE ===== */
+    .sent-table { border-collapse:separate; border-spacing:0 8px; width:100%; }
+    .sent-table thead th {
+        font-size:.8rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:#94a3b8; border:none; padding:.6rem .8rem;
+        background:transparent;
+    }
+    .sent-table tbody tr {
+        background:#f8fafc; transition:background .2s, transform .2s;
+    }
+    .sent-table tbody tr:hover { background:#f1f5f9; transform:translateX(3px); }
+    .sent-table tbody td {
+        padding:.85rem .8rem; border:none; vertical-align:middle;
+        font-size:.92rem; color:#1e293b;
+    }
+    .sent-table tbody td:first-child {
+        border-radius:12px 0 0 12px; border-left:4px solid #0ea5e9;
+    }
+    .sent-table tbody td:last-child { border-radius:0 12px 12px 0; }
+    .btn-delete-row {
+        width:30px; height:30px; border-radius:50%; border:none;
+        background:rgba(239,68,68,.08); color:#ef4444;
+        display:inline-flex; align-items:center; justify-content:center;
+        cursor:pointer; transition:all .2s;
+    }
+    .btn-delete-row:hover { background:#ef4444; color:#fff; }
+</style>
+}
+
+@section Scripts {
+<script>
+let teacherClassrooms = [];
+let classroomStudentsCache = new Map();
+let sentItems = [];
+
+// API yardımcıları
+async function apiGet(url) {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+async function apiPost(url, body) {
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(body ?? {})
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+function classroomLabel(c) {
+    return c?.name || `Sınıf #${c?.id}`;
+}
+
+// Sınıf dropdown
+async function loadClassroomsForAnnouncements() {
+    try {
+        const data = await apiGet('/TeacherPanelProxy/Classrooms');
+        teacherClassrooms = Array.isArray(data) ? data : [];
+
+        const select = document.getElementById('ann-class');
+        if (!select) return;
+
+        select.innerHTML = '';
+        teacherClassrooms.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = classroomLabel(c);
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error('Sınıflar yüklenemedi', err);
+    }
+}
+
+async function loadStudentsForClassroomAnn(classroomId) {
+    if (!classroomId) return [];
+    if (classroomStudentsCache.has(classroomId)) {
+        return classroomStudentsCache.get(classroomId);
+    }
+
+    try {
+        const performances = await apiGet(`/TeacherPanelProxy/ClassroomPerformances?classroomId=${encodeURIComponent(classroomId)}`);
+        const students = (performances || []).map(p => ({
+            id: p.studentId,
+            name: p.studentName
+        }));
+        classroomStudentsCache.set(classroomId, students);
+        return students;
+    } catch (err) {
+        console.error('Öğrenciler yüklenemedi', err);
+        return [];
+    }
+}
+
+async function refreshAnnouncementStudentDropdown() {
+    const classSelect = document.getElementById('ann-class');
+    const studentSelect = document.getElementById('ann-student');
+    if (!classSelect || !studentSelect) return;
+
+    const classroomId = parseInt(classSelect.value);
+    const students = await loadStudentsForClassroomAnn(classroomId);
+
+    studentSelect.innerHTML = '<option value=\"\">Öğrenci seçin...</option>';
+    students.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        studentSelect.appendChild(opt);
+    });
+}
+
+// Hedef butonları
+const form       = document.getElementById('announce-form');
+const classRow   = document.getElementById('ann-class-row');
+const studentRow = document.getElementById('ann-student-row');
+form.querySelectorAll('.target-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        form.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const isClass = btn.dataset.target === 'class';
+        classRow.classList.toggle('d-none', !isClass);
+        studentRow.classList.toggle('d-none', isClass);
+    });
+});
+
+document.getElementById('ann-class')?.addEventListener('change', () => {
+    refreshAnnouncementStudentDropdown();
+});
+
+// Gönderilen duyurular tablosu
+function renderSentList() {
+    const tbody = document.getElementById('sent-table-body');
+    const empty = document.getElementById('sent-empty');
+    const table = document.getElementById('sent-table');
+    document.getElementById('sent-count').textContent = sentItems.length + ' Kayıt';
+
+    if (!sentItems.length) {
+        tbody.innerHTML = '';
+        table.classList.add('d-none');
+        empty.classList.remove('d-none');
+        return;
+    }
+    table.classList.remove('d-none');
+    empty.classList.add('d-none');
+
+    tbody.innerHTML = sentItems.map(item => {
+        const toText = item.classroomName
+            ? `<i class="bi bi-people me-1"></i>${item.classroomName}`
+            : `<i class="bi bi-person me-1"></i>${item.userName || 'Öğrenci'}`;
+        return `
+        <tr>
+            <td>
+                <span class="fw-semibold">${toText}</span>
+            </td>
+            <td class="fw-bold">${item.title}</td>
+            <td class="text-muted">${item.message ? item.message.substring(0,80) + (item.message.length > 80 ? '…' : '') : '–'}</td>
+            <td></td>
+        </tr>`;
+    }).join('');
+}
+
+async function loadAnnouncements() {
+    try {
+        const data = await apiGet('/TeacherPanelProxy/Announcements');
+        sentItems = Array.isArray(data) ? data : [];
+        renderSentList();
+    } catch (err) {
+        console.error('Duyurular yüklenemedi', err);
+    }
+}
+
+// Form submit
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const isClass    = form.querySelector('.target-btn.active').dataset.target === 'class';
+    const classSelect = document.getElementById('ann-class');
+    const studentSel = document.getElementById('ann-student');
+    const classroomId = isClass ? (parseInt(classSelect.value) || null) : null;
+    const studentId  = isClass ? null : (parseInt(studentSel.value) || null);
+    const title      = document.getElementById('ann-title').value.trim();
+    const content    = document.getElementById('ann-content').value.trim();
+
+    if (!title || !content || (!classroomId && !studentId)) return;
+
+    const payload = {
+        title: title,
+        message: content,
+        classroomId: classroomId,
+        userId: studentId
+    };
+
+    const el = document.getElementById('ann-feedback');
+
+    try {
+        await apiPost('/TeacherPanelProxy/CreateAnnouncement', payload);
+        await loadAnnouncements();
+        form.reset();
+
+        el.textContent = '📢 Duyuru başarıyla gönderildi!';
+        el.className = 'mt-3 text-center fw-bold text-primary';
+    } catch (err) {
+        console.error('Duyuru gönderilemedi', err);
+        el.textContent = '❌ Duyuru gönderilemedi. Lütfen tekrar deneyin.';
+        el.className = 'mt-3 text-center fw-bold text-danger';
+    }
+
+    setTimeout(() => el.className = 'mt-3 text-center fw-medium d-none', 3000);
+});
+
+// INIT
+(async function() {
+    await loadClassroomsForAnnouncements();
+    await refreshAnnouncementStudentDropdown();
+    await loadAnnouncements();
+})();
+</script>
+}

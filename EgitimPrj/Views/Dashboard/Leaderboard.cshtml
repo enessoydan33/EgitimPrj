@@ -1,0 +1,529 @@
+@{
+    ViewData["Title"] = "Liderlik Tablosu";
+}
+
+<div class="leaderboard-page mt-4">
+    <!-- Hero Section - Kullanıcı Lig Durumu -->
+    <div class="league-hero">
+        <div class="league-hero-bg"></div>
+        <div class="league-hero-content">
+            <div class="user-league-card" id="user-league-card">
+                <div class="league-badge-large" id="current-league-badge">
+                    <div class="league-icon-wrapper">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="league-glow"></div>
+                </div>
+                <div class="user-league-info">
+                    <h2 class="league-name" id="current-league-name">Yükleniyor...</h2>
+                    <div class="league-stats-row">
+                        <div class="league-stat">
+                            <span class="stat-value" id="user-total-xp">-</span>
+                            <span class="stat-label">Toplam XP</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="stat-value" id="user-rank-in-league">-</span>
+                            <span class="stat-label">Lig Sırası</span>
+                        </div>
+                        <div class="league-stat">
+                            <span class="stat-value" id="league-total-users">-</span>
+                            <span class="stat-label">Toplam Üye</span>
+                        </div>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="league-progress-section" id="league-progress-section">
+                        <div class="progress-labels">
+                            <span id="current-league-label">Mevcut Lig</span>
+                            <span id="next-league-label">Sonraki Lig</span>
+                        </div>
+                        <div class="league-progress-bar">
+                            <div class="league-progress-fill" id="league-progress-fill" style="width: 0%"></div>
+                            <div class="progress-marker" id="progress-marker"></div>
+                        </div>
+                        <div class="progress-xp-info">
+                            <span id="xp-in-league">0 XP</span>
+                            <span id="xp-to-next">0 XP kaldı</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lig Seçici -->
+    <div class="leagues-selector-section">
+        <h3 class="section-title">
+            <i class="bi bi-collection"></i>
+            Tüm Ligler
+        </h3>
+        <div class="leagues-grid" id="leagues-grid">
+            <!-- JS ile doldurulacak -->
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Sıralama Tablosu -->
+    <div class="leaderboard-table-section">
+        <div class="leaderboard-header">
+            <h3 class="section-title">
+                <i class="bi bi-list-ol"></i>
+                <span id="leaderboard-title">Lig Sıralaması</span>
+            </h3>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" data-tab="league">Lig İçi</button>
+                <button class="tab-btn" data-tab="general">Genel</button>
+            </div>
+        </div>
+
+        <div class="leaderboard-content">
+            <!-- Top 3 Podium -->
+            <div class="podium-section" id="podium-section">
+                <div class="podium-item second" id="podium-2">
+                    <div class="podium-avatar">
+                        <div class="avatar-circle silver">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <span class="rank-badge">2</span>
+                    </div>
+                    <div class="podium-name">-</div>
+                    <div class="podium-xp">- XP</div>
+                    <div class="podium-stand silver"></div>
+                </div>
+                <div class="podium-item first" id="podium-1">
+                    <div class="podium-crown">
+                        <i class="bi bi-crown-fill"></i>
+                    </div>
+                    <div class="podium-avatar">
+                        <div class="avatar-circle gold">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <span class="rank-badge">1</span>
+                    </div>
+                    <div class="podium-name">-</div>
+                    <div class="podium-xp">- XP</div>
+                    <div class="podium-stand gold"></div>
+                </div>
+                <div class="podium-item third" id="podium-3">
+                    <div class="podium-avatar">
+                        <div class="avatar-circle bronze">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <span class="rank-badge">3</span>
+                    </div>
+                    <div class="podium-name">-</div>
+                    <div class="podium-xp">- XP</div>
+                    <div class="podium-stand bronze"></div>
+                </div>
+            </div>
+
+            <!-- Rankings List -->
+            <div class="rankings-list" id="rankings-list">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current User Position (if not in top) -->
+            <div class="current-user-position" id="current-user-position" style="display: none;">
+                <div class="separator-dots">• • •</div>
+                <div class="ranking-item current-user" id="current-user-rank-item">
+                    <!-- JS ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Başarılar Bölümü -->
+    <div class="achievements-section mt-4 mb-4">
+        <h3 class="section-title">
+            <i class="bi bi-award-fill"></i>
+            Başarılarım
+        </h3>
+        <div class="glass-card p-4">
+            <div class="achievements-grid" id="achievements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem;">
+                <!-- JS ile doldurulacak -->
+                <div class="text-center w-100">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    // State
+    let currentTab = 'league';
+    let selectedLeagueId = null;
+    let userLeague = null;
+    let allLeagues = [];
+
+    // League renk ve ikon map
+    const leagueStyles = {
+        'Bronz': { color: '#CD7F32', gradient: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)', icon: 'bi-shield-fill' },
+        'Gümüş': { color: '#C0C0C0', gradient: 'linear-gradient(135deg, #E8E8E8 0%, #A8A8A8 100%)', icon: 'bi-shield-fill' },
+        'Altın': { color: '#FFD700', gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', icon: 'bi-award-fill' },
+        'Platin': { color: '#E5E4E2', gradient: 'linear-gradient(135deg, #E5E4E2 0%, #B0C4DE 100%)', icon: 'bi-gem' },
+        'Elmas': { color: '#B9F2FF', gradient: 'linear-gradient(135deg, #B9F2FF 0%, #00CED1 100%)', icon: 'bi-diamond-fill' },
+        'default': { color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', icon: 'bi-trophy-fill' }
+    };
+
+    const getLeagueStyle = (name) => leagueStyles[name] || leagueStyles['default'];
+
+    const fetchJson = window.AppUtils?.fetchJson ?? (async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    });
+
+    const formatNumber = (n) => {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toString();
+    };
+
+    // Kullanıcı Lig Durumunu Yükle
+    const loadUserLeague = async () => {
+        try {
+            userLeague = await fetchJson('/League/MyLeague');
+            renderUserLeague(userLeague);
+            selectedLeagueId = userLeague.currentLeague?.id || userLeague.CurrentLeague?.Id;
+        } catch (err) {
+            console.error('Lig durumu yüklenemedi:', err);
+            document.getElementById('current-league-name').textContent = 'Lig bulunamadı';
+        }
+    };
+
+    const renderUserLeague = (data) => {
+        const league = data.currentLeague || data.CurrentLeague;
+        const nextLeague = data.nextLeague || data.NextLeague;
+        const totalXp = data.totalXp || data.TotalXp || 0;
+        const rankInLeague = data.rankInLeague || data.RankInLeague || '-';
+        const totalUsers = data.totalUsersInLeague || data.TotalUsersInLeague || '-';
+        const progress = data.progressPercentage || data.ProgressPercentage || 0;
+        const xpInLeague = data.xpInCurrentLeague || data.XpInCurrentLeague || 0;
+        const xpToNext = data.xpToNextLeague || data.XpToNextLeague || 0;
+
+        const leagueName = league?.name || league?.Name || 'Bilinmeyen';
+        const style = getLeagueStyle(leagueName);
+
+        // Badge güncelle
+        const badge = document.getElementById('current-league-badge');
+        badge.style.setProperty('background', style.gradient, 'important');
+        badge.style.setProperty('--league-color', style.color);
+        const iconEl = badge.querySelector('.league-icon-wrapper i');
+        if (iconEl) iconEl.className = `bi ${style.icon}`;
+        
+        // Glow rengini ayarla
+        const glow = badge.querySelector('.league-glow');
+        if (glow) glow.style.background = style.color;
+
+        // Bilgileri güncelle
+        document.getElementById('current-league-name').textContent = leagueName + ' Ligi';
+        document.getElementById('user-total-xp').textContent = formatNumber(totalXp);
+        document.getElementById('user-rank-in-league').textContent = '#' + rankInLeague;
+        document.getElementById('league-total-users').textContent = totalUsers;
+
+        // Progress bar
+        const progressSection = document.getElementById('league-progress-section');
+        if (nextLeague) {
+            progressSection.style.display = 'block';
+            document.getElementById('current-league-label').textContent = leagueName;
+            document.getElementById('next-league-label').textContent = nextLeague.name || nextLeague.Name;
+            document.getElementById('league-progress-fill').style.width = progress + '%';
+            document.getElementById('league-progress-fill').style.background = style.gradient;
+            document.getElementById('xp-in-league').textContent = formatNumber(xpInLeague) + ' XP';
+            document.getElementById('xp-to-next').textContent = formatNumber(xpToNext) + ' XP kaldı';
+        } else {
+            progressSection.innerHTML = `
+                <div class="max-league-message">
+                    <i class="bi bi-stars"></i>
+                    <span>En yüksek lige ulaştınız!</span>
+                </div>
+            `;
+        }
+
+        // Hero arka plan rengini ayarla
+        document.querySelector('.league-hero').style.setProperty('--league-color', style.color);
+    };
+
+    // Tüm Ligleri Yükle
+    const loadAllLeagues = async () => {
+        try {
+            const overview = await fetchJson('/League/Overview');
+            allLeagues = overview.leagues || overview.Leagues || [];
+            renderLeaguesGrid(allLeagues, overview.currentUserLeagueId || overview.CurrentUserLeagueId);
+        } catch (err) {
+            console.error('Ligler yüklenemedi:', err);
+            // Fallback: sadece lig listesini al
+            try {
+                const leagues = await fetchJson('/League/All');
+                allLeagues = (leagues || []).map(l => ({ league: l, totalUsers: 0, isCurrentUserLeague: false }));
+                renderLeaguesGrid(allLeagues, null);
+            } catch (e) {
+                document.getElementById('leagues-grid').innerHTML = '<div class="text-muted text-center">Ligler yüklenemedi</div>';
+            }
+        }
+    };
+
+    const renderLeaguesGrid = (leagues, currentUserLeagueId) => {
+        const grid = document.getElementById('leagues-grid');
+        if (!leagues || leagues.length === 0) {
+            grid.innerHTML = '<div class="text-muted text-center">Henüz lig tanımlı değil</div>';
+            return;
+        }
+
+        // Sıralama: RankOrder'a göre
+        const sorted = [...leagues].sort((a, b) => {
+            const aRank = (a.league || a.League)?.rankOrder || (a.league || a.League)?.RankOrder || 0;
+            const bRank = (b.league || b.League)?.rankOrder || (b.league || b.League)?.RankOrder || 0;
+            return aRank - bRank;
+        });
+
+        grid.innerHTML = sorted.map(item => {
+            const league = item.league || item.League;
+            const totalUsers = item.totalUsers || item.TotalUsers || 0;
+            const isCurrentUser = item.isCurrentUserLeague || item.IsCurrentUserLeague || 
+                                  (currentUserLeagueId && (league.id || league.Id) === currentUserLeagueId);
+            const leagueId = league.id || league.Id;
+            const leagueName = league.name || league.Name;
+            const minXp = league.minXp || league.MinXp || 0;
+            const maxXp = league.maxXp || league.MaxXp;
+            const style = getLeagueStyle(leagueName);
+
+            const isSelected = selectedLeagueId === leagueId;
+
+            return `
+                <div class="league-card ${isCurrentUser ? 'current' : ''} ${isSelected ? 'selected' : ''}" 
+                     data-league-id="${leagueId}" onclick="selectLeague(${leagueId})">
+                    <div class="league-card-badge" style="background: ${style.gradient}">
+                        <i class="bi ${style.icon}"></i>
+                    </div>
+                    <div class="league-card-info">
+                        <h4 class="league-card-name">${leagueName}</h4>
+                        <div class="league-card-xp">${formatNumber(minXp)}${maxXp ? ' - ' + formatNumber(maxXp) : '+'} XP</div>
+                        <div class="league-card-users">
+                            <i class="bi bi-people-fill"></i>
+                            <span>${totalUsers} üye</span>
+                        </div>
+                    </div>
+                    ${isCurrentUser ? '<div class="current-badge"><i class="bi bi-check-circle-fill"></i> Senin Ligin</div>' : ''}
+                </div>
+            `;
+        }).join('');
+    };
+
+    // Lig seçme (global fonksiyon)
+    window.selectLeague = (leagueId) => {
+        selectedLeagueId = leagueId;
+        // Seçili kartı güncelle
+        document.querySelectorAll('.league-card').forEach(card => {
+            card.classList.toggle('selected', parseInt(card.dataset.leagueId) === leagueId);
+        });
+        // Sıralamayı yükle
+        loadLeaderboard();
+    };
+
+    // Sıralama Tablosunu Yükle
+    const loadLeaderboard = async () => {
+        const rankingsList = document.getElementById('rankings-list');
+        rankingsList.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+            </div>
+        `;
+
+        try {
+            let data;
+            if (currentTab === 'league' && selectedLeagueId) {
+                data = await fetchJson(`/League/${selectedLeagueId}/Leaderboard?limit=50`);
+                const leagueName = (data.league || data.League)?.name || (data.league || data.League)?.Name || 'Lig';
+                document.getElementById('leaderboard-title').textContent = leagueName + ' Ligi Sıralaması';
+            } else {
+                data = await fetchJson('/LeaderboardProxy/GetGeneralLeaderboard?limit=50');
+                document.getElementById('leaderboard-title').textContent = 'Genel Sıralama';
+            }
+            renderLeaderboard(data);
+        } catch (err) {
+            console.error('Sıralama yüklenemedi:', err);
+            rankingsList.innerHTML = '<div class="text-muted text-center py-4">Sıralama yüklenemedi</div>';
+        }
+    };
+
+    const renderLeaderboard = (data) => {
+        // Data format: league response veya general response
+        const rankings = data.rankings || data.Rankings || [];
+        const currentUser = data.currentUserRank || data.CurrentUserRank;
+
+        // Podium (Top 3)
+        renderPodium(rankings.slice(0, 3));
+
+        // Rest of rankings (4+)
+        const rankingsList = document.getElementById('rankings-list');
+        const rest = rankings.slice(3);
+
+        if (rest.length === 0 && rankings.length <= 3) {
+            rankingsList.innerHTML = rankings.length > 0 ? '' : '<div class="text-muted text-center py-4">Henüz sıralama yok</div>';
+        } else {
+            rankingsList.innerHTML = rest.map(item => {
+                const rank = item.rank || item.Rank;
+                const name = (item.name || item.Name) + ' ' + (item.surname || item.Surname || '');
+                const xp = item.totalXp || item.TotalXp || 0;
+                const streak = item.currentStreak || item.CurrentStreak || 0;
+                const isCurrentUser = item.isCurrentUser || item.IsCurrentUser;
+
+                return `
+                    <div class="ranking-item ${isCurrentUser ? 'current-user' : ''}">
+                        <div class="ranking-rank">${rank}</div>
+                        <div class="ranking-avatar">
+                            <div class="avatar-small">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${name}</div>
+                            ${streak > 0 ? `<div class="ranking-streak"><i class="bi bi-fire"></i> ${streak} gün</div>` : ''}
+                        </div>
+                        <div class="ranking-xp">${formatNumber(xp)} XP</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Current user position (if not in visible list)
+        const currentUserPos = document.getElementById('current-user-position');
+        if (currentUser && !rankings.some(r => (r.isCurrentUser || r.IsCurrentUser))) {
+            const rank = currentUser.rank || currentUser.Rank;
+            const name = (currentUser.name || currentUser.Name) + ' ' + (currentUser.surname || currentUser.Surname || '');
+            const xp = currentUser.totalXp || currentUser.TotalXp || 0;
+            const streak = currentUser.currentStreak || currentUser.CurrentStreak || 0;
+
+            currentUserPos.style.display = 'block';
+            document.getElementById('current-user-rank-item').innerHTML = `
+                <div class="ranking-rank">${rank}</div>
+                <div class="ranking-avatar">
+                    <div class="avatar-small current">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                </div>
+                <div class="ranking-info">
+                    <div class="ranking-name">${name} (Sen)</div>
+                    ${streak > 0 ? `<div class="ranking-streak"><i class="bi bi-fire"></i> ${streak} gün</div>` : ''}
+                </div>
+                <div class="ranking-xp">${formatNumber(xp)} XP</div>
+            `;
+        } else {
+            currentUserPos.style.display = 'none';
+        }
+    };
+
+    const renderPodium = (top3) => {
+        const positions = [
+            { el: 'podium-2', index: 1 }, // 2nd place (left)
+            { el: 'podium-1', index: 0 }, // 1st place (center)
+            { el: 'podium-3', index: 2 }  // 3rd place (right)
+        ];
+
+        positions.forEach(pos => {
+            const podiumEl = document.getElementById(pos.el);
+            const user = top3[pos.index];
+
+            if (user) {
+                const name = (user.name || user.Name) + ' ' + ((user.surname || user.Surname || '').charAt(0) + '.');
+                const xp = user.totalXp || user.TotalXp || 0;
+                const isCurrentUser = user.isCurrentUser || user.IsCurrentUser;
+
+                podiumEl.querySelector('.podium-name').textContent = name;
+                podiumEl.querySelector('.podium-xp').textContent = formatNumber(xp) + ' XP';
+                podiumEl.classList.toggle('is-current-user', isCurrentUser);
+                podiumEl.style.display = '';
+            } else {
+                podiumEl.style.display = 'none';
+            }
+        });
+    };
+
+    // Başarıları Yükle
+    const loadAchievements = async () => {
+        try {
+            const achievements = await fetchJson('/Gamification/AllAchievements');
+            renderAchievements(achievements);
+        } catch (err) {
+            console.error('Başarılar yüklenemedi:', err);
+            const grid = document.getElementById('achievements-grid');
+            if(grid) grid.innerHTML = '<div class="text-muted text-center">Başarılar yüklenemedi</div>';
+        }
+    };
+
+    const renderAchievements = (achievements) => {
+        const grid = document.getElementById('achievements-grid');
+        if (!grid) return;
+        
+        if (!achievements || achievements.length === 0) {
+            grid.innerHTML = '<div class="text-muted text-center">Henüz başarı tanımı yok</div>';
+            return;
+        }
+
+        grid.innerHTML = achievements.map(a => {
+            const name = a.name || a.Name || 'Başarı';
+            const desc = a.description || a.Description || '';
+            const icon = a.icon || a.Icon || 'bi-star';
+            const color = a.badgeColor || a.BadgeColor || '#FFD700';
+            const isEarned = (a.isEarned === true) || (String(a.isEarned).toLowerCase() === 'true') || (a.IsEarned === true);
+            
+            const cardStyle = isEarned 
+                ? `border-top: 3px solid ${color};` 
+                : `border-top: 3px solid #ccc; filter: grayscale(100%); opacity: 0.7;`;
+            
+            const iconColor = isEarned ? color : '#6c757d';
+
+            return `
+                <div class="achievement-card text-center p-3 glass-card" style="min-width: 140px; ${cardStyle}">
+                    <div class="achievement-icon mb-2" style="font-size: 2rem; color: ${iconColor}">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <div class="fw-bold small mb-1 text-truncate" title="${name}">${name}</div>
+                    <div class="text-muted x-small text-truncate" style="font-size: 0.75rem;" title="${desc}">${desc}</div>
+                    ${!isEarned ? '<div class="mt-1"><i class="bi bi-lock-fill text-muted"></i></div>' : ''}
+                </div>
+            `;
+        }).join('');
+    };
+
+    // Tab değiştirme
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTab = btn.dataset.tab;
+            loadLeaderboard();
+        });
+    });
+
+    // Başlat
+    const init = async () => {
+        await loadUserLeague();
+        await loadAllLeagues();
+        await loadLeaderboard();
+        await loadAchievements();
+    };
+
+    init();
+})();
+</script>
+}
+
