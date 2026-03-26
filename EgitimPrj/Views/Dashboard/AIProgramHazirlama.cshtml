@@ -102,17 +102,291 @@
         // API'dan çekilecek ders listesi ve konuları tutacağımız obje
         let ALL_COURSES = {};
 
-        // Varsayılan konu havuzu (API üzerinden henüz konu detayı gelmiyorsa fallback olarak kullanırız)
+        // Ders/Konu fallback havuzu:
+        // - API sadece dersleri verip konu detaylarını döndürmüyorsa, seçilebilir "chip" başlıkları buradan gelir.
+        // - Ana hedef: TYT/AYT konu başlıklarını (SS ve web listeleri) mümkün olduğunca doğru ve sıralı tutmak.
+        //
+        // Not: JS nesne anahtarlarının sırası önemlidir (eşleştirmede ilk eşleşen kullanılır).
         const FALLBACK_TOPICS = {
-            "Matematik": ["Fonksiyonlar", "Türev", "İntegral", "Limit", "Trigonometri", "Polinomlar", "Logaritma", "Diziler"],
-            "Türkçe": ["Anlam Bilgisi", "Sözcükte Anlam", "Cümlede Anlam", "Paragraf", "Dil Bilgisi", "Yazım Kuralları", "Noktalama İşaretleri"],
-            "Fizik": ["Mekanik", "Elektrik", "Optik", "Termodinamik", "Modern Fizik", "Dalga Mekaniği"],
-            "Kimya": ["Modern Atom Teorisi", "Gazlar", "Sıvı Çözeltiler", "Kimyasal Tepkimelerde Enerji", "Organik Kimya"],
-            "Biyoloji": ["Hücre", "Canlıların Ortak Özellikleri", "Kalıtım", "Bitki Biyolojisi", "İnsan Fizyolojisi"],
-            "Tarih": ["İslamiyet Öncesi Türk Tarihi", "Osmanlı Devleti", "İnkılap Tarihi", "Çağdaş Türk ve Dünya Tarihi"],
-            "Coğrafya": ["Doğa ve İnsan", "Dünya'nın Şekli ve Hareketleri", "İklim", "Türkiye Coğrafyası"],
+            // AYT - Sözel
+            "Din Kültürü": [
+                "Dünya ve Ahiret",
+                "Kur'an'a Göre Hz. Muhammed",
+                "Kur'an'da Bazı Kavramlar",
+                "İnançla İlgili Meseleler",
+                "Yahudilik ve Hristiyanlık",
+                "İslam ve Bilim",
+                "Anadolu'da İslam",
+                "İslam Düşüncesinde Tasavvufi Yorumlar",
+                "Güncel Dini Meseleler",
+                "Hint ve Çin Dinleri"
+            ],
+            "Felsefe Grubu": [
+                // AYT Felsefe ve Psikoloji
+                "Felsefenin Konusu",
+                "Bilgi Felsefesi",
+                "Varlık Felsefesi",
+                "Ahlak Felsefesi",
+                "Sanat Felsefesi",
+                "Din Felsefesi",
+                "Siyaset Felsefesi",
+                "Bilim Felsefesi",
+                "İlk Çağ Felsefesi",
+                "MÖ 6. Yüzyıl – MS 2. Yüzyıl Felsefesi",
+                "MS 2. Yüzyıl – MS 15. Yüzyıl Felsefesi",
+                "15. Yüzyıl – 17. Yüzyıl Felsefesi",
+                "18/19. Yüzyıl Felsefesi",
+                "20. Yüzyıl Felsefesi",
+                "Psikoloji Biliminin Tanımı",
+                "Psikolojinin Temel Süreçleri",
+                "Öğrenme Bellek Düşünme",
+                "Ruh Sağlığının Temelleri",
+                // AYT Mantık ve Sosyoloji
+                "Mantığa Giriş",
+                "Klasik Mantık",
+                "Mantık ve Dil",
+                "Sembolik Mantık",
+                "Sosyolojiye Giriş",
+                "Birey ve Toplum",
+                "Toplumsal Yapı",
+                "Toplumsal Değişme ve Gelişme",
+                "Toplum ve Kültür"
+            ],
+            "Edebiyat": [
+                "Güzel Sanatlar ve Edebiyat",
+                "Edebiyatın Bilimle İlişkisi",
+                "Şiir Bilgisi (Nazım Biçimleri, Ölçü, Kafiye)",
+                "Edebi Sanatlar",
+                "Metin Türleri ve Anlatım",
+                "İslamiyet Öncesi Türk Edebiyatı",
+                "İslamiyet Dönemi Türk Edebiyatı",
+                "Halk Edebiyatı",
+                "Divan Edebiyatı",
+                "Tanzimat Edebiyatı",
+                "Servet-i Fünun ve Fecr-i Âti",
+                "Milli Edebiyat",
+                "Cumhuriyet Dönemi Türk Edebiyatı",
+                "Dünya Edebiyatı (Temel)"
+            ],
+            "Tarih": [
+                "Osmanlı Kültür ve Medeniyeti",
+                "Yeniçağ–Yakınçağ Avrupa Tarihi",
+                "20. Yüzyıl Başlarında Dünya",
+                "Mondros–İşgal Dönemi ve Kurtuluş Savaşı",
+                "Atatürk Dönemi İç ve Dış Politika",
+                "İnkılaplar",
+                "Çağdaş Türk ve Dünya Tarihi (Soğuk Savaş, Küreselleşme vb.)"
+            ],
+            "Coğrafya": [
+                "Doğal Sistemler (İklim, Yer Şekilleri, Su–Toprak)",
+                "Beşeri Sistemler (Nüfus, Göç, Yerleşme)",
+                "Ekonomik Faaliyetler (Tarım, Sanayi, Hizmet, Ulaşım)",
+                "Türkiye’nin Coğrafi Özellikleri",
+                "Bölgeler ve Ülkeler",
+                "Küresel Ortam: Doğal Kaynaklar, Çevre, Sürdürülebilirlik"
+            ],
+
+            // AYT - Sayısal
+            "AYT Matematik": [
+                "Fonksiyonlar (İleri)",
+                "Polinomlar",
+                "2. Dereceden Denklemler",
+                "Permütasyon–Kombinasyon–Binom",
+                "Olasılık",
+                "Trigonometri",
+                "Logaritma",
+                "Diziler",
+                "Limit",
+                "Türev",
+                "İntegral",
+                "Analitik Geometri",
+                "Çember–Daire (İleri)",
+                "Uzay Geometri (Katılar)"
+            ],
+            "Fizik": [
+                "Vektörler",
+                "Kuvvet, Tork ve Denge",
+                "Kütle Merkezi",
+                "Basit Makineler",
+                "Hareket (İleri)",
+                "Newton'un Hareket Yasaları",
+                "İş, Güç ve Enerji",
+                "Atışlar",
+                "İtme ve Momentum",
+                "Elektrik Alan ve Potansiyel",
+                "Paralel Levhalar ve Sığa (Kapasite)",
+                "Manyetizma",
+                "İndüksiyon, Alternatif Akım ve Transformatörler",
+                "Çembersel Hareket",
+                "Dönme, Yuvarlanma ve Açısal Momentum",
+                "Açısal Momentum",
+                "Kütle Çekimi ve Kepler Yasaları",
+                "Basit Harmonik Hareket",
+                "Dalga Mekaniği ve Elektromanyetik Dalgalar",
+                "Elektromanyetik Dalgalar",
+                "Atom Modelleri",
+                "Büyük Patlama ve Parçacık Fiziği",
+                "Radyoaktivite",
+                "Özel Görelilik",
+                "Kara Cisim Işıması",
+                "Fotoelektrik Olay ve Compton Olayı",
+                "Compton Olayı",
+                "Modern Fiziğin Teknolojideki Uygulamaları"
+            ],
+            "Kimya": [
+                "Modern Atom Teorisi",
+                "Kimyasal Hesaplamalar",
+                "Gazlar",
+                "Sıvı Çözeltiler ve Çözünürlük",
+                "Kimya ve Enerji",
+                "Tepkimelerde Hız",
+                "Kimyasal Denge",
+                "Sıvı Çözeltilerde Denge (Asit–Baz, Çözünürlük, Tampon vb.)",
+                "Elektrokimya",
+                "Organik Kimyaya Giriş"
+            ],
+            "Biyoloji": [
+                "Sinir Sistemi",
+                "Endokrin Sistem ve Hormonlar",
+                "Duyu Organları",
+                "Destek ve Hareket Sistemi",
+                "Sindirim Sistemi",
+                "Dolaşım ve Bağışıklık Sistemi",
+                "Solunum Sistemi",
+                "Üriner Sistem (Boşaltım Sistemi)",
+                "Üreme Sistemi ve Embriyonik Gelişim",
+                "Kalıtım ve Biyoteknoloji",
+                "Komünite Ekolojisi",
+                "Popülasyon Ekolojisi",
+                "Genden Proteine",
+                "Canlılarda Enerji Dönüşümleri",
+                "Bitki Biyolojisi",
+                "Canlılar ve Çevre"
+            ],
+
+            // TYT - Temel test
+            "Fen Bilimleri": ["Fizik", "Kimya", "Biyoloji"],
+            "Sosyal Bilimler": ["Din Kültürü", "Felsefe", "Coğrafya", "Tarih"],
+            "Türkçe": [
+                "Sözcükte Anlam",
+                "Cümlede Anlam",
+                "Paragrafta Anlam",
+                "Anlatım Biçimleri ve Düşünceyi Geliştirme Yolları",
+                "Ses Bilgisi",
+                "Yazım Kuralları",
+                "Noktalama İşaretleri",
+                "Sözcükte Yapı (Kök–Ek, Yapım/Çekim Ekleri)",
+                "İsimler",
+                "Sıfatlar",
+                "Zamirler",
+                "Zarflar",
+                "Edat–Bağlaç–Ünlem",
+                "Fiiller",
+                "Fiilde Yapı (Çatı, Kip, Kişi, Olumlu–Olumsuz)",
+                "Fiilimsi",
+                "Cümlenin Ögeleri",
+                "Cümle Türleri",
+                "Anlatım Bozukluğu"
+            ],
+            "Matematik": [
+                "Temel Kavramlar",
+                "Sayı Basamakları",
+                "Bölme ve Bölünebilme",
+                "EBOB–EKOK",
+                "Rasyonel Sayılar",
+                "Basit Eşitsizlikler",
+                "Mutlak Değer",
+                "Üslü Sayılar",
+                "Köklü Sayılar",
+                "Çarpanlara Ayırma",
+                "Oran–Orantı",
+                "Denklem Çözme",
+                "Problemler (Sayı, Kesir, Yüzde, Kar–Zarar, Yaş, Hareket, İşçi, Karışım)",
+                "Kümeler",
+                "Fonksiyonlar (Temel)",
+                "Permütasyon",
+                "Kombinasyon",
+                "Binom",
+                "Olasılık",
+                "İstatistik"
+            ],
+            "Geometri": [
+                "Doğruda ve Üçgende Açılar",
+                "Üçgende Açı–Kenar Bağıntıları",
+                "Üçgende Benzerlik",
+                "Üçgende Açıortay–Kenarortay",
+                "Üçgende Alan",
+                "Dörtgenler",
+                "Çokgenler",
+                "Çember ve Daire",
+                "Analitik Geometri (Doğrunun Analitiği – temel)",
+                "Katı Cisimler (Prizma, Silindir, Piramit, Koni, Küre – temel)"
+            ],
+
+            "Yabancı Dil": [
+                "Kelime Bilgisi (Vocabulary)",
+                "Dil Bilgisi (Tense’ler, Modals, Passive, Relative Clauses vb.)",
+                "Cümle Tamamlama",
+                "Paragraf Tamamlama",
+                "Anlam Bütünlüğünü Bozan Cümle",
+                "Çeviri (TR-EN / EN-TR vb.)",
+                "Okuma Parçaları (Reading)",
+                "Dialog / Duruma Uygun İfade"
+            ],
+
             "Varsayılan": ["Konu 1", "Konu 2", "Konu 3", "Genel Tekrar", "Soru Çözümü", "Branş Denemesi", "Fasikül Çözümü"]
         };
+
+        // Tüm ders listelerine "Deneme Çözümü" ekle (chip olarak).
+        Object.keys(FALLBACK_TOPICS).forEach(k => {
+            const arr = FALLBACK_TOPICS[k];
+            if (!Array.isArray(arr)) return;
+            if (!arr.includes("Deneme Çözümü")) arr.push("Deneme Çözümü");
+        });
+
+        // SS'deki "Ders Seçimi" kart sırası
+        const COURSE_ORDER = [
+            "Türkçe",
+            "Matematik",
+            "Fen Bilimleri",
+            "Sosyal Bilimler",
+            "AYT Matematik",
+            "Fizik",
+            "Kimya",
+            "Biyoloji",
+            "Edebiyat",
+            "Tarih-1",
+            "Coğrafya-1",
+            "Tarih-2",
+            "Coğrafya-2",
+            "Felsefe Grubu",
+            "Din Kültürü"
+        ];
+        function getCourseOrderIndex(courseName) {
+            const n = (courseName || '').toLowerCase();
+            for (let i = 0; i < COURSE_ORDER.length; i++) {
+                const key = COURSE_ORDER[i];
+                if (key && n.includes(key.toLowerCase())) return i;
+            }
+            return Number.MAX_SAFE_INTEGER;
+        }
+
+        function normalizeTurkish(s) {
+            return (s || '')
+                .toLowerCase()
+                .replace(/[ğĞ]/g, 'g')
+                .replace(/[üÜ]/g, 'u')
+                .replace(/[şŞ]/g, 's')
+                .replace(/[ıİ]/g, 'i')
+                .replace(/[öÖ]/g, 'o')
+                .replace(/[çÇ]/g, 'c');
+        }
+
+        function isAllowedCourseForSelection(courseName) {
+            const n = normalizeTurkish(courseName);
+            if (n.includes('yabanci') || n.includes('yabancı')) return false;
+            return true;
+        }
 
         let currentStep = 1;
         const hoursByDay = Object.fromEntries(DAYS.map(d => [d, []]));
@@ -176,7 +450,13 @@
 
         function renderCourses() {
             courseGrid.innerHTML = '';
-            Object.keys(ALL_COURSES).forEach(name => {
+            const orderedCourseNames = Object.keys(ALL_COURSES).sort((a, b) => {
+                const ia = getCourseOrderIndex(a);
+                const ib = getCourseOrderIndex(b);
+                if (ia !== ib) return ia - ib;
+                return (a || '').localeCompare((b || ''), 'tr', { sensitivity: 'base' });
+            });
+            orderedCourseNames.forEach(name => {
                 const col = document.createElement('div'); col.className = 'col-12 col-sm-6 col-lg-4';
                 const card = document.createElement('div'); card.className = 'course-card h-100';
                 if (selectedCourses.has(name)) card.classList.add('active');
@@ -345,11 +625,14 @@
                         subjects.forEach(s => {
                             const name = s.Name || s.name;
                             const id = s.Id || s.id;
+                            if (!isAllowedCourseForSelection(name)) return;
                             
                             // Genellikle API ders adları için FallbackTopic eşleşen isim bul
                             let matchedKey = "Varsayılan";
+                            const lowerName = name.toLowerCase();
                             for (const key of Object.keys(FALLBACK_TOPICS)) {
-                                if (name.toLowerCase().includes(key.toLowerCase())) {
+                                if (key === "Varsayılan") continue;
+                                if (lowerName.includes(key.toLowerCase())) {
                                     matchedKey = key;
                                     break;
                                 }
