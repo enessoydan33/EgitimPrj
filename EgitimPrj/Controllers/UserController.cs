@@ -36,12 +36,19 @@ namespace EgitimPrj.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            var createParent = !string.IsNullOrWhiteSpace(model.ParentEmail)
+                && !string.IsNullOrWhiteSpace(model.ParentPassword);
+
             var apiBody = new
             {
                 model.Name,
-                model.SurName,
+                Surname = model.SurName,
                 model.Email,
                 model.Password,
+                ParentEmail = createParent ? model.ParentEmail : null,
+                ParentPassword = createParent ? model.ParentPassword : null,
+                ParentName = createParent && !string.IsNullOrWhiteSpace(model.ParentName) ? model.ParentName : null,
+                ParentSurname = createParent && !string.IsNullOrWhiteSpace(model.ParentSurname) ? model.ParentSurname : null,
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBase}/register")

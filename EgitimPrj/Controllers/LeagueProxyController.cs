@@ -1,13 +1,10 @@
 using EgitimPrj.Models.Response;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 
 namespace EgitimPrj.Controllers
 {
     [Route("League")]
-    public class LeagueProxyController : Controller
+    public class LeagueProxyController : ProxyControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
@@ -29,7 +26,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, ApiBase);
             request.Headers.Add("ngrok-skip-browser-warning", "true");
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         /// <summary>
@@ -40,7 +37,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/{leagueId}");
             request.Headers.Add("ngrok-skip-browser-warning", "true");
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         /// <summary>
@@ -51,7 +48,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/overview");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -66,7 +63,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/my-league");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         /// <summary>
@@ -77,7 +74,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/user/{userId}");
             request.Headers.Add("ngrok-skip-browser-warning", "true");
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         /// <summary>
@@ -88,7 +85,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/my-history");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -103,7 +100,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/{leagueId}/leaderboard?limit={limit}");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         /// <summary>
@@ -114,7 +111,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/my-league/leaderboard?limit={limit}");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -130,57 +127,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBase}/check-update");
             AttachAuth(request);
-            return await Send(request);
-        }
-
-        #endregion
-
-        #region Private Helper Methods
-
-        private async Task<IActionResult> Send(HttpRequestMessage request)
-        {
-            try
-            {
-                var response = await _http.SendAsync(request);
-                if (response.IsSuccessStatusCode)
-                {
-                    var contentType = response.Content.Headers.ContentType?.MediaType;
-                    if (contentType != null && contentType.Contains("application/json"))
-                    {
-                        var json = await response.Content.ReadFromJsonAsync<object>();
-                        return Json(json);
-                    }
-
-                    var text = await response.Content.ReadAsStringAsync();
-                    return Content(text, contentType ?? "text/plain");
-                }
-
-                var errorContent = await response.Content.ReadAsStringAsync();
-                try
-                {
-                    var errorJson = await response.Content.ReadFromJsonAsync<object>();
-                    return StatusCode((int)response.StatusCode, errorJson);
-                }
-                catch
-                {
-                    return StatusCode((int)response.StatusCode, new { message = errorContent });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = $"API hatası: {ex.Message}" });
-            }
-        }
-
-        private void AttachAuth(HttpRequestMessage requestMessage)
-        {
-            var token = HttpContext.Session.GetString("Token");
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
-            // Ngrok tarayıcı uyarısını atlamak için gerekli header
-            requestMessage.Headers.Add("ngrok-skip-browser-warning", "true");
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion

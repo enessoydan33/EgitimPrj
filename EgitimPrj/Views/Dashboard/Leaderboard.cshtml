@@ -182,11 +182,7 @@
 
     const getLeagueStyle = (name) => leagueStyles[name] || leagueStyles['default'];
 
-    const fetchJson = window.AppUtils?.fetchJson ?? (async (url) => {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-    });
+    const fetchJson = window.AppUtils.fetchJson;
 
     const formatNumber = (n) => {
         if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -457,10 +453,28 @@
         });
     };
 
+    const normalizeAchievements = window.AppUtils.normalizeAchievements;
+
     // Başarıları Yükle
     const loadAchievements = async () => {
         try {
-            const achievements = await fetchJson('/Gamification/AllAchievements');
+            let data = null;
+            try {
+                data = await fetchJson('/Gamification/AllAchievements');
+            } catch {
+                // Fallback aşağıda
+            }
+
+            let achievements = normalizeAchievements(data);
+            if (!achievements.length) {
+                const myData = await fetchJson('/Gamification/MyAchievements');
+                achievements = normalizeAchievements(myData).map(a => ({
+                    ...a,
+                    isEarned: true,
+                    IsEarned: true
+                }));
+            }
+
             renderAchievements(achievements);
         } catch (err) {
             console.error('Başarılar yüklenemedi:', err);

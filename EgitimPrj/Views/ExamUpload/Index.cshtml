@@ -1,0 +1,389 @@
+@{
+    ViewData["Title"] = "Deneme PDF Yükle";
+}
+
+<div class="teacher-exam-container fade-in-up mt-5">
+    <div class="modern-page-header header-exam">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Deneme PDF Yükle</h1>
+                <p>Deneme sonuç PDF’ini yükleyin; satırlar ayrıştırılır ve öğrencilerle eşleştirilir.</p>
+            </div>
+        </div>
+        <div class="modern-header-actions d-flex flex-wrap gap-2">
+            <a asp-controller="Teacher" asp-action="TeacherExam" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-journal-check me-1"></i>Manuel Deneme
+            </a>
+            <a asp-controller="Teacher" asp-action="TeacherPanel" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Panele Dön
+            </a>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-3">PDF seçimi</h5>
+                <p class="text-muted small mb-3">
+                    Okul TYT PDF’leri: her ders için <strong>D · Y · N</strong> (doğru, yanlış, net) sütunları okunur; tabloda her ders başlığı altında bu üçlü gösterilir.
+                    Klasik liste formatında yalnızca netler olabilir; o zaman D/Y boş kalır.
+                </p>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label-modern">PDF dosyası</label>
+                        <input type="file" id="pdf-file" accept="application/pdf" class="form-control form-control-modern" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label-modern">Deneme tarihi</label>
+                        <input type="date" id="exam-date" class="form-control form-control-modern" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" id="btn-parse" class="btn btn-gradient-exam w-100 fw-bold py-2">
+                            <i class="bi bi-upload me-1"></i>PDF’i işle
+                        </button>
+                    </div>
+                </div>
+                <div id="parse-feedback" class="mt-3 small d-none"></div>
+                <div id="raw-preview" class="mt-3 p-3 bg-light rounded small text-muted d-none" style="max-height:160px;overflow:auto;white-space:pre-wrap;font-family:monospace;"></div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold text-success mb-3"><i class="bi bi-check-circle me-1"></i>Eşleşenler</h5>
+                <div class="table-responsive exam-upload-scroll" style="max-height:420px;overflow:auto;">
+                    <table class="table table-sm align-middle exam-upload-grid mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2" class="align-middle exam-upload-sticky">Öğrenci</th>
+                                <th colspan="3" class="text-center border-start exam-upload-subhead">Türkçe</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Sosyal</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Mat.</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Fen</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Toplam</th>
+                            </tr>
+                            <tr>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-matched"></tbody>
+                    </table>
+                </div>
+                <button type="button" id="btn-save" class="btn btn-success w-100 mt-3 fw-bold d-none">
+                    <i class="bi bi-cloud-upload me-1"></i>API’ye kaydet (eşleşenler)
+                </button>
+                <div id="save-hint" class="mt-2 small text-muted d-none">Kayıt, mevcut TeacherPanel deneme endpoint’ine (öğrenci başına) gönderilir.</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Eşleşmeyenler</h5>
+                <div class="table-responsive exam-upload-scroll" style="max-height:420px;overflow:auto;">
+                    <table class="table table-sm align-middle exam-upload-grid mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2" class="align-middle exam-upload-sticky">PDF adı</th>
+                                <th rowspan="2" class="align-middle exam-upload-sticky2">No</th>
+                                <th colspan="3" class="text-center border-start exam-upload-subhead">Türkçe</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Sosyal</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Mat.</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Fen</th>
+                                <th colspan="3" class="text-center exam-upload-subhead">Toplam</th>
+                            </tr>
+                            <tr>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                                <th class="text-end border-start small text-muted">D</th>
+                                <th class="text-end small text-muted">Y</th>
+                                <th class="text-end small fw-semibold">N</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-unmatched"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .header-exam { background: linear-gradient(135deg,#ea580c 0%,#f97316 100%); }
+    .glass-card {
+        background:#fff; border-radius:24px;
+        border:1px solid rgba(226,232,240,.8);
+        box-shadow:0 10px 30px rgba(0,0,0,.03);
+    }
+    .form-label-modern {
+        font-size:.8rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:#64748b; margin-bottom:.4rem; display:block;
+    }
+    .form-control-modern {
+        border:2px solid #e2e8f0; border-radius:12px;
+        padding:.7rem 1rem; font-size:.95rem; color:#1e293b;
+        background:#f8fafc;
+    }
+    .btn-gradient-exam {
+        background:linear-gradient(135deg,#ea580c 0%,#f97316 100%);
+        border:none; color:#fff; border-radius:12px;
+    }
+    .fade-in-up { animation: fadeInUp 0.5s ease-out; }
+    @@keyframes fadeInUp {
+        from { opacity:0; transform:translateY(12px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+    .exam-upload-subhead {
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #475569;
+        background: #f8fafc !important;
+    }
+    .exam-upload-grid thead th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .exam-upload-scroll .exam-upload-sticky {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: #f8f9fa;
+        box-shadow: 4px 0 8px -4px rgba(0,0,0,.08);
+    }
+    .exam-upload-scroll .exam-upload-sticky2 {
+        position: sticky;
+        left: 140px;
+        z-index: 3;
+        background: #f8f9fa;
+        box-shadow: 4px 0 8px -4px rgba(0,0,0,.06);
+        min-width: 52px;
+    }
+    @@media (max-width: 991px) {
+        .exam-upload-scroll .exam-upload-sticky2 { left: 120px; }
+    }
+    .exam-upload-scroll tbody .exam-upload-sticky,
+    .exam-upload-scroll tbody .exam-upload-sticky2 {
+        background: #fff;
+    }
+    .exam-upload-scroll tbody tr:hover .exam-upload-sticky,
+    .exam-upload-scroll tbody tr:hover .exam-upload-sticky2 {
+        background: #f1f5f9;
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+(function () {
+    const examDateEl = document.getElementById('exam-date');
+    if (examDateEl) examDateEl.valueAsDate = new Date();
+
+    let lastMatched = [];
+    const examNameDefault = 'PDF Toplu Deneme';
+
+    function fmt(n) {
+        if (n === undefined || n === null) return '–';
+        const x = Number(n);
+        if (Number.isNaN(x)) return '–';
+        return x.toFixed(2);
+    }
+
+    /** JSON camelCase veya PascalCase özellik okur */
+    function prop(r, camel) {
+        if (!r) return undefined;
+        const pascal = camel.charAt(0).toUpperCase() + camel.slice(1);
+        const a = r[camel];
+        if (a !== undefined && a !== null) return a;
+        return r[pascal];
+    }
+
+    /** Doğru / yanlış; PDF’de genelde tam sayı */
+    function fmtDy(n) {
+        if (n === undefined || n === null) return '–';
+        const x = Number(n);
+        if (Number.isNaN(x)) return '–';
+        if (Math.abs(x - Math.round(x)) < 0.001) return String(Math.round(x));
+        return x.toFixed(2).replace('.', ',');
+    }
+
+    function cellsDyN(r) {
+        const tur = (c, w, net) =>
+            `<td class="text-end border-start">${fmtDy(prop(r, c))}</td>` +
+            `<td class="text-end">${fmtDy(prop(r, w))}</td>` +
+            `<td class="text-end fw-semibold">${fmt(prop(r, net))}</td>`;
+        return (
+            tur('turkishCorrect', 'turkishWrong', 'turkishNet') +
+            `<td class="text-end border-start">${fmtDy(prop(r, 'socialCorrect'))}</td>` +
+            `<td class="text-end">${fmtDy(prop(r, 'socialWrong'))}</td>` +
+            `<td class="text-end fw-semibold">${fmt(prop(r, 'socialNet'))}</td>` +
+            `<td class="text-end border-start">${fmtDy(prop(r, 'mathCorrect'))}</td>` +
+            `<td class="text-end">${fmtDy(prop(r, 'mathWrong'))}</td>` +
+            `<td class="text-end fw-semibold">${fmt(prop(r, 'mathNet'))}</td>` +
+            `<td class="text-end border-start">${fmtDy(prop(r, 'scienceCorrect'))}</td>` +
+            `<td class="text-end">${fmtDy(prop(r, 'scienceWrong'))}</td>` +
+            `<td class="text-end fw-semibold">${fmt(prop(r, 'scienceNet'))}</td>` +
+            `<td class="text-end border-start">${fmtDy(prop(r, 'totalCorrect'))}</td>` +
+            `<td class="text-end">${fmtDy(prop(r, 'totalWrong'))}</td>` +
+            `<td class="text-end fw-bold">${fmt(prop(r, 'totalNet'))}</td>`
+        );
+    }
+
+    function setFeedback(msg, ok) {
+        const el = document.getElementById('parse-feedback');
+        el.classList.remove('d-none', 'text-danger', 'text-success', 'text-muted');
+        el.classList.add(ok === true ? 'text-success' : ok === false ? 'text-danger' : 'text-muted');
+        el.textContent = msg || '';
+    }
+
+    function renderRows(matched, unmatched) {
+        const tm = document.getElementById('tbody-matched');
+        const tu = document.getElementById('tbody-unmatched');
+        tm.innerHTML = (matched || []).map(r => `
+            <tr>
+                <td class="exam-upload-sticky">
+                    <div class="fw-semibold">${escapeHtml(r.studentName || r.StudentName || '')}</div>
+                    <div class="text-muted small">#${r.studentId ?? r.StudentId} · Sınıf ${r.classroomId ?? r.ClassroomId}</div>
+                </td>
+                ${cellsDyN(r)}
+            </tr>`).join('') || '<tr><td colspan="16" class="text-muted text-center py-3">Eşleşen yok</td></tr>';
+
+        tu.innerHTML = (unmatched || []).map(r => `
+            <tr>
+                <td class="exam-upload-sticky">${escapeHtml(r.studentName || r.StudentName || '')}</td>
+                <td class="exam-upload-sticky2">${escapeHtml(r.studentNumber || r.StudentNumber || '–')}</td>
+                ${cellsDyN(r)}
+            </tr>`).join('') || '<tr><td colspan="17" class="text-muted text-center py-3">Eşleşmeyen yok</td></tr>';
+
+        const saveBtn = document.getElementById('btn-save');
+        const hint = document.getElementById('save-hint');
+        if (matched && matched.length) {
+            saveBtn.classList.remove('d-none');
+            hint.classList.remove('d-none');
+        } else {
+            saveBtn.classList.add('d-none');
+            hint.classList.add('d-none');
+        }
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    document.getElementById('btn-parse').addEventListener('click', async () => {
+        const f = document.getElementById('pdf-file').files[0];
+        if (!f) { setFeedback('Lütfen PDF seçin.', false); return; }
+
+        const fd = new FormData();
+        fd.append('file', f);
+        const d = document.getElementById('exam-date').value;
+        if (d) fd.append('examDate', d);
+
+        setFeedback('İşleniyor…', null);
+        try {
+            const res = await fetch('/ExamUpload/UploadPdf', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok) {
+                setFeedback(data.errorMessage || data.ErrorMessage || ('HTTP ' + res.status), false);
+                lastMatched = [];
+                renderRows([], []);
+                return;
+            }
+            const matched = data.matched || data.Matched || [];
+            const unmatched = data.unmatched || data.Unmatched || [];
+            lastMatched = matched;
+
+            if (data.success === false || data.Success === false) {
+                setFeedback(data.errorMessage || data.ErrorMessage || 'Ayrıştırma başarısız', false);
+                const prev = data.rawTextPreview || data.RawTextPreview;
+                const rp = document.getElementById('raw-preview');
+                if (prev) { rp.textContent = prev; rp.classList.remove('d-none'); }
+                renderRows(matched, unmatched);
+                return;
+            }
+
+            setFeedback(`Tamam: ${matched.length} eşleşti, ${unmatched.length} eşleşmedi.`, true);
+            const rp = document.getElementById('raw-preview');
+            const prev = data.rawTextPreview || data.RawTextPreview;
+            if (prev) { rp.textContent = prev; rp.classList.remove('d-none'); }
+            else rp.classList.add('d-none');
+
+            renderRows(matched, unmatched);
+        } catch (e) {
+            console.error(e);
+            setFeedback('İstek hatası: ' + (e.message || 'bilinmiyor'), false);
+        }
+    });
+
+    document.getElementById('btn-save').addEventListener('click', async () => {
+        if (!lastMatched.length) return;
+        const examDate = document.getElementById('exam-date').value || new Date().toISOString().slice(0, 10);
+        const body = {
+            examName: examNameDefault,
+            examType: 'TYT',
+            examDate: examDate,
+            rows: lastMatched.map(r => ({
+                studentId: r.studentId ?? r.StudentId,
+                classroomId: r.classroomId ?? r.ClassroomId,
+                turkishNet: r.turkishNet ?? r.TurkishNet,
+                mathNet: r.mathNet ?? r.MathNet,
+                scienceNet: r.scienceNet ?? r.ScienceNet,
+                socialNet: r.socialNet ?? r.SocialNet,
+                totalNet: r.totalNet ?? r.TotalNet
+            }))
+        };
+
+        setFeedback('API’ye kaydediliyor…', null);
+        try {
+            const res = await fetch('/ExamUpload/Save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            const errs = data.errors || data.Errors || [];
+            if (!res.ok) {
+                setFeedback((errs[0]) || ('HTTP ' + res.status), false);
+                return;
+            }
+            const saved = data.savedCount ?? data.SavedCount ?? 0;
+            const fail = data.failedCount ?? data.FailedCount ?? 0;
+            setFeedback(`Kayıt: ${saved} başarılı, ${fail} hata.`, fail ? false : true);
+            if (errs.length) console.warn(errs);
+        } catch (e) {
+            setFeedback('Kayıt hatası: ' + (e.message || ''), false);
+        }
+    });
+})();
+</script>
+}

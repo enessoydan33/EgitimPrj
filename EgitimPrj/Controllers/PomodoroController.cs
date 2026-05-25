@@ -84,7 +84,7 @@ namespace EgitimPrj.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateSchedule(CreateScheduleRequest model)
+        public async Task<IActionResult> CreateSchedule([FromBody] CreateScheduleRequest model)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBase}/schedule")
             {
@@ -96,7 +96,7 @@ namespace EgitimPrj.Controllers
 
         [HttpPut]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateSchedule(int scheduleId, UpdateScheduleRequest model)
+        public async Task<IActionResult> UpdateSchedule(int scheduleId, [FromBody] UpdateScheduleRequest model)
         {
             var request = new HttpRequestMessage(HttpMethod.Put, $"{ApiBase}/schedule/{scheduleId}")
             {
@@ -127,6 +127,20 @@ namespace EgitimPrj.Controllers
         public async Task<IActionResult> TodaySchedule()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/schedule/today");
+            AttachAuth(request);
+            return await Send(request);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RandomVideoRecommendation()
+        {
+            var baseUrl = _configuration["ApiSettings:BaseUrl"]?.TrimEnd('/');
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, "API base URL tanımlı değil.");
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/api/VideoRecommendation/random");
             AttachAuth(request);
             return await Send(request);
         }

@@ -72,6 +72,22 @@
                     </div>
 
                     <div class="mb-3">
+                        <div class="parent-mode-card" id="ann-parent-card">
+                            <div class="form-check form-switch m-0 d-flex align-items-start justify-content-between gap-3">
+                                <div>
+                                    <label class="form-check-label fw-semibold d-flex align-items-center gap-2" for="ann-parent-only">
+                                        <i class="bi bi-person-hearts parent-mode-icon"></i>
+                                        Sadece veliye gönder
+                                    </label>
+                                    <div class="small text-muted mt-1" id="ann-parent-help">Seçili öğrenci/sınıfın velilerine iletilir.</div>
+                                </div>
+                                <input class="form-check-input parent-mode-switch" type="checkbox" role="switch" id="ann-parent-only">
+                            </div>
+                            <div class="parent-mode-chip" id="ann-parent-chip">Öğrenci hedefli</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label-modern">Başlık</label>
                         <input type="text" class="form-control form-control-modern" id="ann-title"
                                placeholder="Duyuru başlığı..." required>
@@ -177,6 +193,56 @@
         border-color:#0ea5e9; background:#e0f2fe; color:#0284c7;
     }
     .target-btn:hover:not(.active) { border-color:#bae6fd; background:#f0f9ff; }
+
+    .parent-mode-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: .8rem .95rem;
+        transition: all .25s ease;
+    }
+    .parent-mode-card.active {
+        border-color: #0ea5e9;
+        background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+        box-shadow: 0 0 0 4px rgba(14,165,233,.08);
+    }
+    .parent-mode-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e2e8f0;
+        color: #64748b;
+        font-size: .8rem;
+        transition: all .25s ease;
+    }
+    .parent-mode-card.active .parent-mode-icon {
+        background: #0ea5e9;
+        color: #fff;
+    }
+    .parent-mode-switch {
+        width: 2.4rem !important;
+        height: 1.3rem !important;
+        cursor: pointer;
+    }
+    .parent-mode-chip {
+        display: inline-block;
+        margin-top: .5rem;
+        font-size: .75rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: .22rem .6rem;
+        letter-spacing: .2px;
+        background: #e2e8f0;
+        color: #475569;
+        transition: all .25s ease;
+    }
+    .parent-mode-card.active .parent-mode-chip {
+        background: #0ea5e9;
+        color: #fff;
+    }
 
     .btn-gradient-info {
         background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);
@@ -307,6 +373,19 @@ async function refreshAnnouncementStudentDropdown() {
 const form       = document.getElementById('announce-form');
 const classRow   = document.getElementById('ann-class-row');
 const studentRow = document.getElementById('ann-student-row');
+const parentOnlySwitch = document.getElementById('ann-parent-only');
+const parentCard = document.getElementById('ann-parent-card');
+const parentChip = document.getElementById('ann-parent-chip');
+
+function syncParentModeUi() {
+    if (!parentOnlySwitch || !parentCard || !parentChip) return;
+    const on = parentOnlySwitch.checked;
+    parentCard.classList.toggle('active', on);
+    parentChip.textContent = on ? 'Veli hedefli' : 'Öğrenci hedefli';
+}
+
+parentOnlySwitch?.addEventListener('change', syncParentModeUi);
+syncParentModeUi();
 form.querySelectorAll('.target-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         form.querySelectorAll('.target-btn').forEach(b => b.classList.remove('active'));
@@ -338,13 +417,18 @@ function renderSentList() {
     empty.classList.add('d-none');
 
     tbody.innerHTML = sentItems.map(item => {
+        const audience = (item.targetAudience || item.TargetAudience || 'Students').toString();
+        const isParentAudience = audience === 'Parents' || audience === 'Both';
         const toText = item.classroomName
             ? `<i class="bi bi-people me-1"></i>${item.classroomName}`
             : `<i class="bi bi-person me-1"></i>${item.userName || 'Öğrenci'}`;
+        const audienceBadge = isParentAudience
+            ? '<span class="badge bg-info-soft text-info ms-2">Veli</span>'
+            : '<span class="badge bg-primary-soft text-primary ms-2">Öğrenci</span>';
         return `
         <tr>
             <td>
-                <span class="fw-semibold">${toText}</span>
+                <span class="fw-semibold">${toText}${audienceBadge}</span>
             </td>
             <td class="fw-bold">${item.title}</td>
             <td class="text-muted">${item.message ? item.message.substring(0,80) + (item.message.length > 80 ? '…' : '') : '–'}</td>
@@ -373,6 +457,7 @@ form.addEventListener('submit', async e => {
     const studentId  = isClass ? null : (parseInt(studentSel.value) || null);
     const title      = document.getElementById('ann-title').value.trim();
     const content    = document.getElementById('ann-content').value.trim();
+    const parentOnly = document.getElementById('ann-parent-only')?.checked === true;
 
     if (!title || !content || (!classroomId && !studentId)) return;
 
@@ -380,7 +465,8 @@ form.addEventListener('submit', async e => {
         title: title,
         message: content,
         classroomId: classroomId,
-        userId: studentId
+        userId: studentId,
+        targetAudience: parentOnly ? 'Parents' : 'Students'
     };
 
     const el = document.getElementById('ann-feedback');
@@ -389,6 +475,7 @@ form.addEventListener('submit', async e => {
         await apiPost('/TeacherPanelProxy/CreateAnnouncement', payload);
         await loadAnnouncements();
         form.reset();
+        syncParentModeUi();
 
         el.textContent = '📢 Duyuru başarıyla gönderildi!';
         el.className = 'mt-3 text-center fw-bold text-primary';

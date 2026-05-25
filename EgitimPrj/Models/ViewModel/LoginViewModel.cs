@@ -1,12 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using EgitimPrj.Models.Validation;
 
 namespace EgitimPrj.Models.ViewModel
 {
     public class LoginViewModel
     {
+        private string _email = string.Empty;
+
         [Required(ErrorMessage = "E-posta zorunludur.")]
-        [EmailAddress(ErrorMessage = "Geçerli bir e-posta girin.")]
-        public string Email { get; set; } = string.Empty;
+        [StandardEmail]
+        public string Email
+        {
+            get => _email;
+            set => _email = EmailInput.Normalize(value);
+        }
 
         [Required(ErrorMessage = "Şifre zorunludur.")]
         [MinLength(6, ErrorMessage = "Şifre en az 6 karakter olmalı.")]

@@ -1,0 +1,93 @@
+@{
+    ViewData["Title"] = "Veli Paneli";
+}
+
+<div class="parent-summary-page">
+    <div class="modern-page-header header-parent mb-4">
+        <div class="modern-header-content">
+            <div class="modern-header-icon"><i class="bi bi-person-hearts"></i></div>
+            <div class="modern-header-text">
+                <h1>Veli Paneli</h1>
+                <p>Öğrenci özeti ve bilgilendirmeler</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="parent-panel-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="parent-panel-title mb-0">Özet</h5>
+                    <button class="btn btn-sm parent-panel-outline-btn" id="pdReloadBtn" type="button">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+                    </button>
+                </div>
+
+                <div id="pdAlert" class="alert alert-danger d-none"></div>
+
+                <div class="mb-3">
+                    <div class="text-muted small">Veli</div>
+                    <div class="fw-semibold" id="pdParentName">-</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Öğrenci</div>
+                    <div class="fw-semibold" id="pdStudentName">-</div>
+                </div>
+
+                <div class="p-3 rounded-3 border bg-light" style="border-color: #e5e7eb !important;">
+                    <div class="text-muted small mb-1">AI Özeti</div>
+                    <div id="pdAiSummary" class="text-body">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="parent-panel-card h-100">
+                <h5 class="parent-panel-title mb-3">Hızlı erişim</h5>
+                <div class="d-grid gap-2">
+                    <a class="btn parent-panel-outline-btn" asp-controller="ParentPanel" asp-action="Messages">
+                        <i class="bi bi-envelope-paper me-2"></i>Mesajlar
+                    </a>
+                    <a class="btn parent-panel-outline-btn" asp-controller="ParentPanel" asp-action="Appointments">
+                        <i class="bi bi-calendar-plus me-2"></i>Randevu talebi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const { fetchJson, setVisible } = window.AppUtils;
+
+    const alertEl = document.getElementById('pdAlert');
+    const reloadBtn = document.getElementById('pdReloadBtn');
+
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text ?? '';
+    };
+
+    const load = async () => {
+        setVisible(alertEl, false);
+        setText('pdAiSummary', 'Yükleniyor...');
+        try {
+            const data = await fetchJson('/ParentPanelProxy/dashboard');
+            setText('pdParentName', data?.parentName ?? data?.ParentName ?? '-');
+            setText('pdStudentName', data?.studentName ?? data?.StudentName ?? '-');
+            setText('pdAiSummary', data?.aiSummary ?? data?.AISummary ?? '-');
+        } catch (e) {
+            alertEl.textContent = 'Özet yüklenirken hata oluştu: ' + (e?.message || e);
+            alertEl.classList.remove('d-none');
+            setText('pdAiSummary', 'Yükleme başarısız.');
+        }
+    };
+
+    reloadBtn?.addEventListener('click', load);
+    document.addEventListener('DOMContentLoaded', load);
+})();
+</script>
+}

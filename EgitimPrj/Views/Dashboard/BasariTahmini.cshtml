@@ -127,7 +127,7 @@
     }
 </style>
 
-<div class="tahmin-container">
+<div class="tahmin-container pt-4">
     <!-- Başlık -->
     <div class="modern-page-header header-ai mb-4">
         <div class="modern-header-content">
@@ -245,6 +245,10 @@
 @section Scripts {
 <script>
 (function () {
+    const fetchJson = window.AppUtils.fetchJson;
+    const setText = window.AppUtils.setText;
+    const setVisible = window.AppUtils.setVisible;
+
     // ──────────────────────────────────────────────────────
     // Dönem tanımları — tarih sıralaması için kullanılır
     // ──────────────────────────────────────────────────────
@@ -333,26 +337,29 @@
     // ──────────────────────────────────────────────────────
     // API'den denemeleri çek ve formu doldur
     // ──────────────────────────────────────────────────────
-    window.denemeleriYukle = async function() {
+    function setAutoLoadState(loading, statusText, buttonText) {
         const btn = document.getElementById('autoLoadBtn');
         const durum = document.getElementById('autoLoadDurum');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Yükleniyor...';
-        durum.textContent = 'Deneme verileri çekiliyor...';
+        if (!btn || !durum) return;
+        btn.disabled = !!loading;
+        btn.innerHTML = loading
+            ? '<span class="spinner-border spinner-border-sm me-1"></span> Yükleniyor...'
+            : `<i class="bi bi-cloud-download"></i> ${buttonText || 'Verileri Yükle'}`;
+        if (typeof statusText === 'string') durum.textContent = statusText;
+    }
+
+    window.denemeleriYukle = async function() {
+        setAutoLoadState(true, 'Deneme verileri çekiliyor...');
         hataGizle();
         bilgiGizle();
 
         try {
             // Tüm denemelerin listesini çek (summary)
-            const listResp = await fetch('/Exam/List');
-            if (!listResp.ok) throw new Error(`HTTP ${listResp.status}`);
-            const listData = await listResp.json();
+            const listData = await fetchJson('/Exam/List');
 
             const trials = listData?.trials || listData?.Trials || listData || [];
             if (!Array.isArray(trials) || trials.length === 0) {
-                durum.textContent = 'Henüz kayıtlı deneme bulunamadı.';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-cloud-download"></i> Verileri Yükle';
+                setAutoLoadState(false, 'Henüz kayıtlı deneme bulunamadı.', 'Verileri Yükle');
                 return;
             }
 
@@ -367,17 +374,15 @@
             });
 
             if (filtrelenmis.length === 0) {
-                durum.textContent = `${sinav} türünde kayıtlı deneme bulunamadı.`;
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-cloud-download"></i> Verileri Yükle';
+                setAutoLoadState(false, `${sinav} türünde kayıtlı deneme bulunamadı.`, 'Verileri Yükle');
                 return;
             }
 
             // Her deneme için detail çek (SubjectScores için)
             const detailPromises = filtrelenmis.map(t => {
                 const id = t.id || t.Id;
-                return fetch(`/Exam/Detail/${id}`)
-                    .then(r => r.ok ? r.json() : null)
+                return fetchJson(`/Exam/Detail/${id}`)
+                    .then(data => data || null)
                     .catch(() => null);
             });
 
@@ -437,19 +442,18 @@
             });
 
             if (doldurulan > 0) {
-                durum.textContent = `${doldurulan} deneme kaydı otomatik yüklendi. İstediğiniz değerleri düzenleyebilirsiniz.`;
+                setAutoLoadState(true, `${doldurulan} deneme kaydı otomatik yüklendi. İstediğiniz değerleri düzenleyebilirsiniz.`);
                 bilgiGoster(`<strong>${doldurulan} deneme</strong> verisi otomatik yüklendi. Değerleri dilediğiniz gibi düzenleyebilir, ardından <strong>Tahmini Hesapla</strong> butonuna tıklayabilirsiniz.`);
             } else {
-                durum.textContent = 'Ders verileri eşleştirilemedi. Lütfen manuel girin.';
+                setAutoLoadState(true, 'Ders verileri eşleştirilemedi. Lütfen manuel girin.');
             }
 
         } catch (e) {
             console.error(e);
             hataGoster('Deneme verileri yüklenirken hata oluştu: ' + e.message);
-            durum.textContent = 'Yükleme başarısız.';
+            setAutoLoadState(true, 'Yükleme başarısız.');
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-cloud-download"></i> Yenile';
+            setAutoLoadState(false, null, 'Yenile');
         }
     };
 
@@ -516,16 +520,16 @@
         gosterLoading(true);
 
         try {
-            const resp = await fetch(endpoint, {
+            const json = await fetchJson(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ denemeler, sinav_tarihi: sinavTarihi })
             });
-            const json = await resp.json();
-            if (!resp.ok) { hataGoster(json.message ?? `Sunucu hatası (${resp.status})`); return; }
             sonuclariGoster(json, mevcutSinav);
         } catch (e) {
-            hataGoster("ML servisine ulaşılamadı. Python API'nin çalıştığından emin olun.");
+            hataGoster(e?.message?.startsWith('HTTP')
+                ? `Sunucu hatası: ${e.message}`
+                : "ML servisine ulaşılamadı. Python API'nin çalıştığından emin olun.");
         } finally {
             gosterLoading(false);
         }
@@ -630,25 +634,25 @@
     function fmt(val) { return val == null ? '—' : parseFloat(val).toFixed(1); }
 
     function hataGoster(msg) {
-        document.getElementById('hataMetin').textContent = msg;
-        document.getElementById('hataBox').style.display = 'flex';
+        setText('hataMetin', msg);
+        setVisible('hataBox', true, 'flex');
     }
-    function hataGizle() { document.getElementById('hataBox').style.display = 'none'; }
+    function hataGizle() { setVisible('hataBox', false); }
 
     function bilgiGoster(html) {
         document.getElementById('bilgiMetin').innerHTML = html;
-        document.getElementById('bilgiBox').style.display = 'flex';
+        setVisible('bilgiBox', true, 'flex');
     }
-    function bilgiGizle() { document.getElementById('bilgiBox').style.display = 'none'; }
+    function bilgiGizle() { setVisible('bilgiBox', false); }
 
     function gosterLoading(durum) {
-        document.getElementById('loadingSpinner').style.display = durum ? 'flex' : 'none';
+        setVisible('loadingSpinner', durum, 'flex');
         document.getElementById('tahminBtn').disabled = durum;
     }
 
     function gizleSonuc() {
         document.getElementById('sonucSection').classList.remove('goster');
-        document.getElementById('temizleBtn').style.display = 'none';
+        setVisible('temizleBtn', false);
         hataGizle();
     }
 

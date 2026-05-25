@@ -1,11 +1,10 @@
-using System.Net;
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace EgitimPrj.Controllers
 {
     [Route("[controller]")]
-    public class StudentPanelProxyController : Controller
+    public class StudentPanelProxyController : ProxyControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
@@ -22,56 +21,44 @@ namespace EgitimPrj.Controllers
         public async Task<IActionResult> Announcements()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{StudentPanelBase}/announcements");
-            AttachUserAuth(request);
-            return await Send(request);
+            AttachAuth(request);
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpGet("homeworks")]
         public async Task<IActionResult> Homeworks()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{StudentPanelBase}/homeworks");
-            AttachUserAuth(request);
-            return await Send(request);
+            AttachAuth(request);
+            return await SendProxyAsync(_http, request);
         }
 
-        private async Task<IActionResult> Send(HttpRequestMessage request)
+        [HttpGet("appointments")]
+        public async Task<IActionResult> Appointments()
         {
-            try
-            {
-                var response = await _http.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var contentType = response.Content.Headers.ContentType?.MediaType;
-                    if (contentType != null && contentType.Contains("application/json"))
-                    {
-                        return Content(body, "application/json");
-                    }
-
-                    return Content(body, contentType ?? "text/plain");
-                }
-
-                Console.WriteLine("API ERROR: " + response.StatusCode + " - " + body);
-                return StatusCode((int)response.StatusCode, new { error = true, details = body });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("PROXY EXCEPTION: " + ex.ToString());
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { error = true, details = ex.Message });
-            }
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{StudentPanelBase}/appointments");
+            AttachAuth(request);
+            return await SendProxyAsync(_http, request);
         }
 
-        private void AttachUserAuth(HttpRequestMessage request)
+        [HttpGet("appointments/teachers")]
+        public async Task<IActionResult> AppointmentTeachers()
         {
-            // Öğrenci JWT token'ı
-            var token = HttpContext.Session.GetString("Token");
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{StudentPanelBase}/appointments/teachers");
+            AttachAuth(request);
+            return await SendProxyAsync(_http, request);
+        }
 
-            request.Headers.Add("ngrok-skip-browser-warning", "true");
+        [HttpPost("appointments/request")]
+        public async Task<IActionResult> RequestAppointment([FromBody] System.Text.Json.JsonElement body)
+        {
+            var jsonString = System.Text.Json.JsonSerializer.Serialize(body);
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{StudentPanelBase}/appointments/request")
+            {
+                Content = new StringContent(jsonString, Encoding.UTF8, "application/json")
+            };
+            AttachAuth(request);
+            return await SendProxyAsync(_http, request);
         }
     }
 }

@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "Randevu ve program";
+}
+
+<div class="parent-summary-page">
+    <div class="modern-page-header header-parent mb-4">
+        <div class="modern-header-content">
+            <div class="modern-header-icon"><i class="bi bi-calendar-week"></i></div>
+            <div class="modern-header-text">
+                <h1>Randevu ve program</h1>
+                <p>Öğretmeninizi seçerek randevu talebi oluşturun</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="parent-panel-card">
+                <h5 class="parent-panel-title mb-3">Randevu talebi</h5>
+                <div id="apptAlert" class="alert d-none" role="alert"></div>
+
+                <form id="apptForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="apptTeacherSelect">Öğretmen</label>
+                        <select class="form-select rounded-3" id="apptTeacherSelect" name="teacherId" required>
+                            <option value="">Öğretmenler yükleniyor...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="apptNote">Not (opsiyonel)</label>
+                        <textarea class="form-control rounded-3" id="apptNote" name="notes" rows="3" placeholder="Kısa açıklama"></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button id="apptSubmitBtn" type="submit" class="btn btn-lg btn-parent-cta">
+                            <i class="bi bi-send me-2"></i>Randevu Oluştur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="parent-panel-card h-100">
+                <h5 class="parent-panel-title mb-3">Bilgilendirme</h5>
+                <p class="info-callout mb-0">
+                    Öğretmen listesi sunucudan gelir. Talep seçtiğiniz öğretmene iletilir.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const { apiRequest, fetchJson, safeHtml } = window.AppUtils;
+
+    const form = document.getElementById('apptForm');
+    const alertEl = document.getElementById('apptAlert');
+    const btn = document.getElementById('apptSubmitBtn');
+    const teacherSelect = document.getElementById('apptTeacherSelect');
+
+    const showAlert = (kind, text) => {
+        alertEl.className = 'alert';
+        alertEl.classList.add(kind === 'success' ? 'alert-success' : 'alert-danger');
+        alertEl.textContent = text;
+        alertEl.classList.remove('d-none');
+    };
+
+    const getAntiForgeryToken = () =>
+        document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+    const asArray = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data?.data)) return data.data;
+        return [];
+    };
+
+    const teacherLabel = (t) => {
+        const name = [t.name ?? t.Name, t.surname ?? t.Surname].filter(Boolean).join(' ').trim();
+        const branch = (t.branch ?? t.Branch ?? '').trim();
+        if (branch) return `${name} (${branch})`;
+        return name || 'Öğretmen';
+    };
+
+    const loadTeachers = async () => {
+        if (!teacherSelect) return;
+        teacherSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+        teacherSelect.disabled = true;
+        try {
+            const data = await fetchJson('/ParentPanelProxy/appointments/teachers');
+            const list = asArray(data);
+            list.sort((a, b) => teacherLabel(a).localeCompare(teacherLabel(b), 'tr'));
+            if (!list.length) {
+                teacherSelect.innerHTML = '<option value="">Kayıtlı öğretmen bulunamadı</option>';
+                return;
+            }
+            teacherSelect.innerHTML = '<option value="" selected disabled>Öğretmen seçin</option>' +
+                list.map((t) => {
+                    const id = t.id ?? t.Id;
+                    return `<option value="${Number(id)}">${safeHtml(teacherLabel(t))}</option>`;
+                }).join('');
+        } catch (err) {
+            console.error(err);
+            teacherSelect.innerHTML = '<option value="">Liste yüklenemedi</option>';
+        } finally {
+            teacherSelect.disabled = false;
+        }
+    };
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertEl.classList.add('d-none');
+
+        const teacherId = Number(teacherSelect?.value);
+        const notes = document.getElementById('apptNote')?.value?.trim();
+
+        if (!teacherId || Number.isNaN(teacherId) || teacherId <= 0) {
+            showAlert('error', 'Lütfen bir öğretmen seçin.');
+            return;
+        }
+
+        btn.disabled = true;
+        try {
+            const res = await apiRequest('/ParentPanelProxy/appointments/request', {
+                method: 'POST',
+                body: { teacherId, notes: notes || null },
+                includeAntiForgery: true,
+                headers: { RequestVerificationToken: getAntiForgeryToken() },
+            });
+
+            if (res.ok) {
+                showAlert('success', 'Randevu talebiniz gönderildi. Öğretmen onayladığında planlanacaktır.');
+                form.reset();
+                await loadTeachers();
+            } else {
+                let errText = '';
+                try { errText = await res.text(); } catch { /* ignore */ }
+                const suffix = errText ? `: ${errText}` : '';
+                showAlert('error', `Randevu oluşturulamadı (HTTP ${res.status})${suffix}`);
+            }
+        } catch (err) {
+            showAlert('error', 'İşlem sırasında hata oluştu: ' + (err?.message || err));
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadTeachers);
+})();
+</script>
+}

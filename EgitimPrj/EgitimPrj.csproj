@@ -22,4 +22,9 @@
     <_WebToolingArtifacts Remove="Properties\NewFolder\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2026.2.4" />
+    <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
+  </ItemGroup>
+
 </Project>

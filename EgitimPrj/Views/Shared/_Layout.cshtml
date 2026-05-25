@@ -15,13 +15,18 @@
     @{
         bool isLoggedIn = Context.Session.GetString("IsLoggedIn") == "true";
         bool isTeacherLoggedIn = Context.Session.GetString("IsTeacherLoggedIn") == "true";
+        bool isParentLoggedIn = Context.Session.GetString("IsParentLoggedIn") == "true";
         string? userName = Context.Session.GetString("Name");
         string? userId = Context.Session.GetString("UserId");
     }
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark navbar-gradient">
             <div class="container-fluid">
-                <a class="navbar-brand fw-bold text-white" asp-action="Index" asp-controller="Dashboard">CoMentor</a>
+                @{
+                    var brandController = isTeacherLoggedIn ? "Teacher" : "Dashboard";
+                    var brandAction = isTeacherLoggedIn ? "TeacherPanel" : (isParentLoggedIn ? "ParentSummary" : "Index");
+                }
+                <a class="navbar-brand fw-bold text-white" asp-action="@brandAction" asp-controller="@brandController">CoMentor</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -58,6 +63,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="ParentSummary" class="nav-link text-white">
+                                    <i class="bi bi-people-fill me-2"></i>Veli Özeti
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a asp-controller="Dashboard" asp-action="ExamTracking" class="nav-link text-white">
                                     <i class="bi bi-graph-up-arrow me-2"></i>Deneme Takibi
                                 </a>
@@ -68,14 +78,40 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="Appointments" class="nav-link text-white">
+                                    <i class="bi bi-calendar2-event me-2"></i>Randevu
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a asp-controller="Dashboard" asp-action="Leaderboard" class="nav-link text-white">
                                     <i class="bi bi-trophy-fill me-2"></i>Liderlik
                                 </a>
                             </li>
                         </ul>
                     }
+                    else if (isParentLoggedIn)
+                    {
+                        <!-- Veli giriş yaptıysa -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a asp-controller="Dashboard" asp-action="ParentSummary" class="nav-link text-white">
+                                    <i class="bi bi-people-fill me-2"></i>Veli Bilgilendirme
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="ParentPanel" asp-action="Messages" class="nav-link text-white">
+                                    <i class="bi bi-envelope-paper me-2"></i>Mesajlar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="ParentPanel" asp-action="Appointments" class="nav-link text-white">
+                                    <i class="bi bi-calendar-week me-2"></i>Etüt ve randevu
+                                </a>
+                            </li>
+                        </ul>
+                    }
                 <div class="ms-auto">
-                    @if (isLoggedIn || isTeacherLoggedIn)
+                    @if (isLoggedIn || isTeacherLoggedIn || isParentLoggedIn)
                     {
                         <div class="d-flex align-items-center">
                             <div class="nav-item dropdown">
@@ -91,11 +127,24 @@
                                     <li><a class="dropdown-item" asp-action="UpdatePassword" asp-controller="User"><i class="bi bi-gear me-2"></i>Şifre Değiştir</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form asp-controller="User" asp-action="Logout" method="post" class="d-inline">
-                                            <button type="submit" class="dropdown-item text-danger">
+                                        @if (isTeacherLoggedIn)
+                                        {
+                                            <a class="dropdown-item text-danger" asp-controller="Teacher" asp-action="Logout">
                                                 <i class="bi bi-box-arrow-left me-2"></i>Çıkış Yap
-                                            </button>
-                                        </form>
+                                            </a>
+                                        }
+                                        else if (isParentLoggedIn)
+                                        {
+                                            <a class="dropdown-item text-danger" asp-controller="Parent" asp-action="Logout">
+                                                <i class="bi bi-box-arrow-left me-2"></i>Çıkış Yap
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="dropdown-item text-danger" asp-controller="User" asp-action="Logout">
+                                                <i class="bi bi-box-arrow-left me-2"></i>Çıkış Yap
+                                            </a>
+                                        }
                                     </li>
                                 </ul>
                             </div>
@@ -106,6 +155,8 @@
                         <div class="d-flex gap-2">
                             <a asp-controller="User" asp-action="Index" class="btn btn-outline-light">Giriş Yap</a>
                             <a asp-controller="User" asp-action="Register" class="btn btn-light text-dark">Kayıt Ol</a>
+                            <a asp-controller="Parent" asp-action="Login" class="btn btn-outline-light">Veli Girişi</a>
+                            <a asp-controller="Teacher" asp-action="Login" class="btn btn-outline-light">Öğretmen</a>
                         </div>
                     }
                     @RenderSection("Styles", required: false)

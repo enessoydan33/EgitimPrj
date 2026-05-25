@@ -15,7 +15,10 @@
                 <p>Öğrencilerinizin deneme sonuçlarını girin ve performanslarını takip edin.</p>
             </div>
         </div>
-        <div class="modern-header-actions">
+        <div class="modern-header-actions d-flex flex-wrap gap-2">
+            <a asp-controller="ExamUpload" asp-action="Pdf" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF ile yükle
+            </a>
             <a asp-action="TeacherPanel" class="btn btn-light text-primary fw-bold shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Panele Dön
             </a>
@@ -408,6 +411,16 @@ function getTotal(s) {
     return keys.reduce((sum, k) => sum + (data[k] || 0), 0);
 }
 
+function formatNetWithoutRounding(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '0';
+    const truncated = Math.trunc(numeric * 100) / 100;
+    return truncated.toLocaleString('tr-TR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    });
+}
+
 function renderTableHead() {
     const thead = document.getElementById('student-table-head');
     const keys = getActiveKeys();
@@ -456,7 +469,7 @@ function renderStudentCards(students) {
             </td>
             <td><span class="badge" style="background:#f1f5f9;color:#475569;font-size:.88rem;padding:.35rem .65rem;">${s.cls}</span></td>
             ${subjectCells}
-            <td><span class="total-net ${totalCls}">${total.toFixed(1)}</span></td>
+            <td><span class="total-net ${totalCls}">${formatNetWithoutRounding(total)}</span></td>
         </tr>`;
     }).join('');
 }

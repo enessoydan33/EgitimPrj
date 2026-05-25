@@ -80,6 +80,9 @@ Desktop.ini
 # Rider
 .idea/
 
+# Local OCR / test assets
+assets/ocr_tmp/
+
 # dotnet
 project.lock.json
 project.fragment.lock.json

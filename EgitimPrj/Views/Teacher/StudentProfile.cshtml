@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="modern-header-actions">
-            <a asp-action="TeacherExam" class="btn btn-light text-primary fw-bold shadow-sm">
+            <a asp-controller="ExamUpload" asp-action="Index" class="btn btn-light text-primary fw-bold shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Geri Dön
             </a>
         </div>
@@ -365,7 +365,7 @@ async function loadStudentProfile() {
         if (!perf) {
             document.querySelector('.student-profile-container').innerHTML =
                 `<div class="text-center py-5"><h3 class="text-muted">Öğrenci bulunamadı</h3>
-                 <a href="/Teacher/TeacherExam" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
+                 <a href="/ExamUpload" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
             return;
         }
 
@@ -398,7 +398,7 @@ async function loadStudentProfile() {
         console.error('Profil yüklenemedi', err);
         document.querySelector('.student-profile-container').innerHTML =
             `<div class="text-center py-5"><h3 class="text-muted">Profil yüklenemedi</h3>
-             <a href="/Teacher/TeacherExam" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
+             <a href="/ExamUpload" class="btn btn-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Geri Dön</a></div>`;
     }
 }
 

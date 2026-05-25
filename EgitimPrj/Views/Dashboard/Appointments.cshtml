@@ -1,0 +1,221 @@
+@{
+    ViewData["Title"] = "Randevu";
+}
+
+<div class="parent-summary-page">
+    <div class="modern-page-header header-parent mb-4">
+        <div class="modern-header-content">
+            <div class="modern-header-icon"><i class="bi bi-calendar2-event"></i></div>
+            <div class="modern-header-text">
+                <h1>Randevu</h1>
+                <p>Öğretmeninizi seçerek randevu talebi oluşturun ve randevularınızı görüntüleyin</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="parent-panel-card">
+                <h5 class="parent-panel-title mb-3">Randevu talebi</h5>
+
+                <div id="saAlert" class="alert d-none" role="alert"></div>
+
+                <form id="saForm" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="saTeacherSelect">Öğretmen</label>
+                        <select class="form-select rounded-3" id="saTeacherSelect" required>
+                            <option value="">Öğretmenler yükleniyor...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="saNotes">Not (opsiyonel)</label>
+                        <textarea class="form-control rounded-3" id="saNotes" rows="3" placeholder="Kısa açıklama"></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button id="saSubmitBtn" type="submit" class="btn btn-lg btn-parent-cta">
+                            <i class="bi bi-send me-2"></i>Talep gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="parent-panel-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="parent-panel-title mb-0">Randevularım</h5>
+                    <button class="btn btn-sm parent-panel-outline-btn" id="saReloadBtn" type="button">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+                    </button>
+                </div>
+
+                <div id="saListAlert" class="alert alert-danger d-none"></div>
+
+                <div class="table-responsive rounded-3 border" style="border-color: #e5e7eb !important;">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Öğretmen</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saTbody">
+                            <tr><td colspan="3" class="text-muted py-4">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const { safeHtml, fetchJson } = window.AppUtils;
+
+    const alertEl = document.getElementById('saAlert');
+    const listAlertEl = document.getElementById('saListAlert');
+    const form = document.getElementById('saForm');
+    const btn = document.getElementById('saSubmitBtn');
+    const reloadBtn = document.getElementById('saReloadBtn');
+    const tbody = document.getElementById('saTbody');
+    const teacherSelect = document.getElementById('saTeacherSelect');
+
+    const showAlert = (kind, text) => {
+        alertEl.className = 'alert';
+        alertEl.classList.add(kind === 'success' ? 'alert-success' : 'alert-danger');
+        alertEl.textContent = text;
+        alertEl.classList.remove('d-none');
+    };
+
+    const fmtDate = (d) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        if (Number.isNaN(dt.getTime())) return '-';
+        return dt.toLocaleString('tr-TR');
+    };
+
+    const asArray = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.$values)) return data.$values;
+        return [];
+    };
+
+    const teacherLabel = (t) => {
+        const name = [t.name ?? t.Name, t.surname ?? t.Surname].filter(Boolean).join(' ').trim();
+        const branch = (t.branch ?? t.Branch ?? '').trim();
+        if (branch) return `${name} (${branch})`;
+        return name || 'Öğretmen';
+    };
+
+    const loadTeachers = async () => {
+        if (!teacherSelect) return;
+        teacherSelect.innerHTML = '<option value="">Yükleniyor...</option>';
+        teacherSelect.disabled = true;
+        try {
+            const data = await fetchJson('/StudentPanelProxy/appointments/teachers');
+            const list = asArray(data);
+            list.sort((a, b) => teacherLabel(a).localeCompare(teacherLabel(b), 'tr'));
+            if (!list.length) {
+                teacherSelect.innerHTML = '<option value="">Kayıtlı öğretmen bulunamadı</option>';
+                return;
+            }
+            teacherSelect.innerHTML = '<option value="" selected disabled>Öğretmen seçin</option>' +
+                list.map((t) => {
+                    const id = t.id ?? t.Id;
+                    return `<option value="${Number(id)}">${safeHtml(teacherLabel(t))}</option>`;
+                }).join('');
+        } catch (e) {
+            console.error(e);
+            teacherSelect.innerHTML = '<option value="">Liste yüklenemedi</option>';
+        } finally {
+            teacherSelect.disabled = false;
+        }
+    };
+
+    const renderList = (list) => {
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-muted py-4">Randevu bulunamadı.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(x => {
+            const teacher = x.teacherName ?? x.TeacherName ?? '-';
+            const status = x.status ?? x.Status ?? '-';
+            const date = x.appointmentDate ?? x.AppointmentDate ?? x.createdAt ?? x.CreatedAt;
+            return `
+                <tr>
+                    <td class="fw-semibold">${safeHtml(teacher)}</td>
+                    <td>${safeHtml(status)}</td>
+                    <td class="text-muted">${safeHtml(fmtDate(date))}</td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    const loadAppointments = async () => {
+        listAlertEl.classList.add('d-none');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-muted py-4">Yükleniyor...</td></tr>';
+        try {
+            const data = await fetchJson('/StudentPanelProxy/appointments');
+            renderList(asArray(data));
+        } catch (e) {
+            listAlertEl.textContent = 'Randevular yüklenirken hata oluştu: ' + (e?.message || e);
+            listAlertEl.classList.remove('d-none');
+            tbody.innerHTML = '<tr><td colspan="3" class="text-muted py-4">Yükleme başarısız.</td></tr>';
+        }
+    };
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertEl.classList.add('d-none');
+
+        const teacherId = Number(teacherSelect?.value);
+        const notes = document.getElementById('saNotes')?.value?.trim();
+
+        if (!teacherId || Number.isNaN(teacherId) || teacherId <= 0) {
+            showAlert('error', 'Lütfen bir öğretmen seçin.');
+            return;
+        }
+
+        btn.disabled = true;
+        try {
+            const res = await fetch('/StudentPanelProxy/appointments/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teacherId, notes: notes || null })
+            });
+
+            if (res.ok) {
+                showAlert('success', 'Randevu talebi gönderildi.');
+                form.reset();
+                await loadTeachers();
+                await loadAppointments();
+            } else {
+                let errText = '';
+                try { errText = await res.text(); } catch { /* ignore */ }
+                const suffix = errText ? `: ${errText}` : '';
+                showAlert('error', `Talep gönderilemedi (HTTP ${res.status})${suffix}`);
+            }
+        } catch (err) {
+            showAlert('error', 'İşlem sırasında hata oluştu: ' + (err?.message || err));
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    reloadBtn?.addEventListener('click', loadAppointments);
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTeachers();
+        loadAppointments();
+    });
+})();
+</script>
+}

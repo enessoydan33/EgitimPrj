@@ -33,6 +33,12 @@ namespace EgitimPrj.Controllers
             return View();
         }
 
+        public IActionResult ParentSummary()
+        {
+            ViewData["Title"] = "Veli Bilgilendirme";
+            return View();
+        }
+
         public IActionResult ExamTracking()
         {
             ViewData["Title"] = "Deneme Takibi";
@@ -77,6 +83,12 @@ namespace EgitimPrj.Controllers
         public IActionResult Schedule()
         {
             ViewData["Title"] = "Randevu Takvimi";
+            return View();
+        }
+
+        public IActionResult Appointments()
+        {
+            ViewData["Title"] = "Randevu";
             return View();
         }
     }

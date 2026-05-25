@@ -89,6 +89,70 @@
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
 
+                    <hr class="my-4 text-muted opacity-25" />
+                    <div class="mb-2">
+                        <h3 class="h6 fw-semibold text-dark mb-1">
+                            <i class="bi bi-people me-2 text-primary"></i>Veli paneli <span class="text-muted fw-normal">(isteğe bağlı)</span>
+                        </h3>
+                        <p class="text-muted small mb-0">
+                            Doldurursanız veli, öğrenciyle ilişkilendirilmiş ayrı bir hesapla giriş yapabilir. Boş bırakabilirsiniz.
+                        </p>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label asp-for="ParentName" class="form-label fw-semibold"></label>
+                            <input asp-for="ParentName" type="text" class="form-control" placeholder="Veli adı" autocomplete="off" />
+                            <span asp-validation-for="ParentName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ParentSurname" class="form-label fw-semibold"></label>
+                            <input asp-for="ParentSurname" type="text" class="form-control" placeholder="Veli soyadı" autocomplete="off" />
+                            <span asp-validation-for="ParentSurname" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ParentEmail" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-envelope text-muted"></i>
+                            </span>
+                            <input asp-for="ParentEmail" type="email" class="form-control border-start-0" placeholder="veli@email.com" autocomplete="off" />
+                        </div>
+                        <span asp-validation-for="ParentEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ParentPassword" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock text-muted"></i>
+                            </span>
+                            <input asp-for="ParentPassword" type="password" class="form-control border-start-0" placeholder="Veli paneli şifresi" autocomplete="new-password" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button"
+                                    onclick="togglePassword('ParentPassword','parentRegPasswordToggle')">
+                                <i class="bi bi-eye" id="parentRegPasswordToggle"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ParentPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ParentConfirmPassword" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock-fill text-muted"></i>
+                            </span>
+                            <input asp-for="ParentConfirmPassword" type="password" class="form-control border-start-0" placeholder="Veli şifresi tekrar" autocomplete="new-password" />
+                            <button class="btn btn-outline-secondary border-start-0" type="button"
+                                    onclick="togglePassword('ParentConfirmPassword','parentRegPasswordConfirmToggle')">
+                                <i class="bi bi-eye" id="parentRegPasswordConfirmToggle"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ParentConfirmPassword" class="text-danger"></span>
+                    </div>
+
                     <div class="mb-4">
                         <div class="form-check">
                             <input asp-for="AcceptTerms" class="form-check-input" />

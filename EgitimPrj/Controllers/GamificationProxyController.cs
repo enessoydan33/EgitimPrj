@@ -1,12 +1,11 @@
 using EgitimPrj.Models.Response.Gamification;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Net.Http.Headers;
 
 namespace EgitimPrj.Controllers
 {
     [Route("Gamification")]
-    public class GamificationProxyController : Controller
+    public class GamificationProxyController : ProxyControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
@@ -23,17 +22,23 @@ namespace EgitimPrj.Controllers
         [HttpGet("MyAchievements")]
         public async Task<IActionResult> GetMyAchievements()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/api/Achievements/my-achievements");
-            AttachAuth(request);
-            return await Send(request);
+            return await SendWithFallback(
+                $"{ApiBase}/api/Achievements/my-achievements",
+                $"{ApiBase}/api/Achievements",
+                $"{ApiBase}/api/Achievement/my-achievements",
+                $"{ApiBase}/api/Achievement"
+            );
         }
 
         [HttpGet("AllAchievements")]
         public async Task<IActionResult> GetAllAchievements()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/api/Achievements");
-            AttachAuth(request);
-            return await Send(request);
+            return await SendWithFallback(
+                $"{ApiBase}/api/Achievements",
+                $"{ApiBase}/api/Achievements/my-achievements",
+                $"{ApiBase}/api/Achievement",
+                $"{ApiBase}/api/Achievement/my-achievements"
+            );
         }
 
         #endregion
@@ -45,7 +50,7 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/api/StudyStreaks/status");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost("CheckIn")]
@@ -53,57 +58,67 @@ namespace EgitimPrj.Controllers
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBase}/api/StudyStreaks/check-in");
             AttachAuth(request);
-            return await Send(request);
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
 
         #region Helper Methods
 
-        private async Task<IActionResult> Send(HttpRequestMessage request)
+        private async Task<IActionResult> SendWithFallback(params string[] urls)
         {
-            try
+            HttpStatusCode lastStatus = HttpStatusCode.BadGateway;
+            string lastContent = "No response";
+            string lastContentType = "text/plain";
+
+            foreach (var url in urls)
             {
-                var response = await _http.SendAsync(request);
-                if (response.IsSuccessStatusCode)
-                {
-                    var contentType = response.Content.Headers.ContentType?.MediaType;
-                    if (contentType != null && contentType.Contains("application/json"))
-                    {
-                        var json = await response.Content.ReadFromJsonAsync<object>();
-                        return Json(json);
-                    }
-
-                    var text = await response.Content.ReadAsStringAsync();
-                    return Content(text, contentType ?? "text/plain");
-                }
-
                 try
                 {
-                    var errorJson = await response.Content.ReadFromJsonAsync<object>();
-                    return StatusCode((int)response.StatusCode, errorJson);
-                }
-                catch
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return StatusCode((int)response.StatusCode, new { message = errorContent });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = $"API hatası: {ex.Message}" });
-            }
-        }
+                    using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    AttachAuth(request);
+                    var response = await _http.SendAsync(request);
+                    var contentType = response.Content.Headers.ContentType?.MediaType ?? "text/plain";
+                    var content = await response.Content.ReadAsStringAsync();
 
-        private void AttachAuth(HttpRequestMessage requestMessage)
-        {
-            var token = HttpContext.Session.GetString("Token");
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        if (contentType.Contains("application/json"))
+                        {
+                            return new ContentResult
+                            {
+                                StatusCode = (int)response.StatusCode,
+                                ContentType = "application/json",
+                                Content = content
+                            };
+                        }
+
+                        return Content(content, contentType);
+                    }
+
+                    lastStatus = response.StatusCode;
+                    lastContent = content;
+                    lastContentType = contentType;
+                }
+                catch (Exception ex)
+                {
+                    lastStatus = HttpStatusCode.InternalServerError;
+                    lastContent = ex.Message;
+                    lastContentType = "text/plain";
+                }
             }
-            // Ngrok tarayıcı uyarısını atlamak için gerekli header
-            requestMessage.Headers.Add("ngrok-skip-browser-warning", "true");
+
+            if (lastContentType.Contains("application/json"))
+            {
+                return new ContentResult
+                {
+                    StatusCode = (int)lastStatus,
+                    ContentType = "application/json",
+                    Content = lastContent
+                };
+            }
+
+            return StatusCode((int)lastStatus, new { message = lastContent });
         }
 
         #endregion

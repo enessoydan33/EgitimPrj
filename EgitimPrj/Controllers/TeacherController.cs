@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
+using EgitimPrj.Models;
 using EgitimPrj.Models.Response;
 using EgitimPrj.Models.ViewModel;
+using EgitimPrj.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EgitimPrj.Controllers
@@ -35,14 +37,39 @@ namespace EgitimPrj.Controllers
 
         public IActionResult TeacherHomework()
         {
-            var isTeacherLoggedIn = HttpContext.Session.GetString("IsTeacherLoggedIn");
-            if (!string.Equals(isTeacherLoggedIn, "true", StringComparison.OrdinalIgnoreCase))
-            {
+            if (!IsTeacherLoggedIn())
                 return RedirectToAction(nameof(Login));
-            }
 
             ViewData["Title"] = "Ödev Gönder";
             return View();
+        }
+
+        /// <summary>Ödev modülü kullanım kılavuzu (PDF).</summary>
+        [HttpGet]
+        public IActionResult HomeworkDocumentationPdf()
+        {
+            if (!IsTeacherLoggedIn())
+                return RedirectToAction(nameof(Login));
+
+            var pdf = TeacherHomeworkDocumentationPdf.BuildGuide();
+            // Üçüncü parametre attachment üretir; yeni sekmede boş sayfa görülebiliyor. Görüntüleme için inline.
+            return File(pdf, "application/pdf");
+        }
+
+        /// <summary>Açık ödev kontrolündeki ödevin özet bilgilerini PDF olarak döner.</summary>
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public IActionResult HomeworkSnapshotPdf([FromBody] HomeworkSnapshotRequest? body)
+        {
+            if (!IsTeacherLoggedIn())
+                return Unauthorized();
+
+            if (body is null)
+                return BadRequest();
+
+            var pdf = TeacherHomeworkDocumentationPdf.BuildSnapshot(body);
+
+            return File(pdf, "application/pdf");
         }
 
         public IActionResult TeacherAnnouncement()
@@ -59,13 +86,28 @@ namespace EgitimPrj.Controllers
 
         public IActionResult TeacherExam()
         {
-            var isTeacherLoggedIn = HttpContext.Session.GetString("IsTeacherLoggedIn");
-            if (!string.Equals(isTeacherLoggedIn, "true", StringComparison.OrdinalIgnoreCase))
-            {
+            if (!IsTeacherLoggedIn())
                 return RedirectToAction(nameof(Login));
-            }
 
             ViewData["Title"] = "Öğrenci Denemesi Ekle";
+            return View();
+        }
+
+        /// <summary>/Teacher/TrialExam → /ExamUpload → TeacherExam</summary>
+        public IActionResult TrialExam()
+        {
+            if (!IsTeacherLoggedIn())
+                return RedirectToAction(nameof(Login));
+
+            return RedirectToAction("Index", "ExamUpload");
+        }
+
+        public IActionResult TeacherAppointments()
+        {
+            if (!IsTeacherLoggedIn())
+                return RedirectToAction(nameof(Login));
+
+            ViewData["Title"] = "Randevu Talepleri";
             return View();
         }
 
@@ -118,8 +160,9 @@ namespace EgitimPrj.Controllers
 
                     HttpContext.Session.SetString("IsTeacherLoggedIn", "true");
                     HttpContext.Session.SetString("TeacherName", data?.UserName ?? model.Email);
-                    if (data is not null && data.UserId > 0)
-                        HttpContext.Session.SetString("UserId", data.UserId.ToString());
+                    var resolvedId = data is null ? 0 : (data.UserId > 0 ? data.UserId : data.TeacherId);
+                    if (resolvedId > 0)
+                        HttpContext.Session.SetString("UserId", resolvedId.ToString());
                     if (!string.IsNullOrWhiteSpace(data?.Token))
                         HttpContext.Session.SetString("TeacherToken", data!.Token);
 
@@ -175,8 +218,9 @@ namespace EgitimPrj.Controllers
 
                     HttpContext.Session.SetString("IsTeacherLoggedIn", "true");
                     HttpContext.Session.SetString("TeacherName", data?.UserName ?? model.Email);
-                    if (data is not null && data.UserId > 0)
-                        HttpContext.Session.SetString("UserId", data.UserId.ToString());
+                    var resolvedId = data is null ? 0 : (data.UserId > 0 ? data.UserId : data.TeacherId);
+                    if (resolvedId > 0)
+                        HttpContext.Session.SetString("UserId", resolvedId.ToString());
                     if (!string.IsNullOrWhiteSpace(data?.Token))
                         HttpContext.Session.SetString("TeacherToken", data!.Token);
 
@@ -212,9 +256,13 @@ namespace EgitimPrj.Controllers
             HttpContext.Session.Remove("IsTeacherLoggedIn");
             HttpContext.Session.Remove("TeacherName");
             HttpContext.Session.Remove("TeacherToken");
+            HttpContext.Session.Remove("UserId");
             return RedirectToAction(nameof(Login));
         }
 
         #endregion
+
+        private bool IsTeacherLoggedIn() =>
+            string.Equals(HttpContext.Session.GetString("IsTeacherLoggedIn"), "true", StringComparison.OrdinalIgnoreCase);
     }
 }

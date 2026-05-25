@@ -1,0 +1,428 @@
+@{
+    ViewData["Title"] = "Randevu Talepleri";
+}
+
+<div class="teacher-appt-container fade-in-up mt-5">
+
+    <div class="modern-page-header header-appt">
+        <div class="modern-header-content">
+            <div class="modern-header-icon">
+                <i class="bi bi-calendar2-check-fill"></i>
+            </div>
+            <div class="modern-header-text">
+                <h1>Randevu Talepleri</h1>
+                <p>Veli ve öğrencilerden gelen talepleri onaylayın; tarih ve saat atayarak randevuyu planlayın.</p>
+            </div>
+        </div>
+        <div class="modern-header-actions d-flex flex-wrap gap-2 justify-content-end">
+            <a asp-action="TeacherPanel" class="btn btn-light text-primary fw-bold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Panele Dön
+            </a>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="glass-card p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill bg-warning text-dark" id="taPendingBadge">0 bekleyen</span>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="btn-group" role="group" aria-label="Filtre">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="Pending">Bekleyen</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-filter="Scheduled">Planlanan</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-filter="all">Tümü</button>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="taReloadBtn">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+                </button>
+            </div>
+        </div>
+
+        <div id="taAlert" class="alert alert-danger d-none" role="alert"></div>
+
+        <div class="table-responsive rounded-3 border" style="border-color: #e5e7eb !important;">
+            <table class="table align-middle mb-0 appt-table">
+                <thead>
+                    <tr>
+                        <th>Öğrenci</th>
+                        <th>Talep eden</th>
+                        <th>Durum</th>
+                        <th>Not</th>
+                        <th>Talep tarihi</th>
+                        <th>Plan</th>
+                        <th class="text-end">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="taTbody">
+                    <tr><td colspan="7" class="text-muted py-4">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="taScheduleModal" tabindex="-1" aria-labelledby="taScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="taScheduleModalLabel">Randevuyu onayla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3" id="taModalSummary"></p>
+                <div id="taModalAlert" class="alert alert-danger d-none small"></div>
+                <form id="taScheduleForm" novalidate>
+                    <input type="hidden" id="taAppointmentId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="taDate">Tarih</label>
+                        <input type="date" class="form-control rounded-3" id="taDate" required />
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" for="taStart">Başlangıç</label>
+                            <input type="time" class="form-control rounded-3" id="taStart" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" for="taEnd">Bitiş</label>
+                            <input type="time" class="form-control rounded-3" id="taEnd" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="taTeacherNotes">Öğretmen notu (opsiyonel)</label>
+                        <textarea class="form-control rounded-3" id="taTeacherNotes" rows="2"></textarea>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold" for="taMeetingUrl">Görüşme bağlantısı (opsiyonel)</label>
+                        <input type="url" class="form-control rounded-3" id="taMeetingUrl" placeholder="https://..." />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-primary fw-bold" id="taConfirmBtn">
+                    <i class="bi bi-check2-circle me-1"></i>Onayla ve planla
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .teacher-appt-container .header-appt {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.25);
+    }
+
+    .teacher-appt-container .glass-card {
+        background: #fff;
+        border-radius: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    }
+
+    .teacher-appt-container .appt-table thead th {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #64748b;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .teacher-appt-container .appt-table tbody td {
+        color: #1e293b;
+        vertical-align: middle;
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+(() => {
+    const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const safeHtml = (window.AppUtils && window.AppUtils.safeHtml) ? window.AppUtils.safeHtml : escapeHtml;
+
+    let allAppointments = [];
+    let currentFilter = 'Pending';
+    let scheduleModal;
+
+    const tbody = document.getElementById('taTbody');
+    const alertEl = document.getElementById('taAlert');
+    const pendingBadge = document.getElementById('taPendingBadge');
+    const modalEl = document.getElementById('taScheduleModal');
+    const modalAlert = document.getElementById('taModalAlert');
+    const modalSummary = document.getElementById('taModalSummary');
+    const confirmBtn = document.getElementById('taConfirmBtn');
+
+    const statusLabel = {
+        Pending: 'Bekliyor',
+        Scheduled: 'Planlandı',
+        Cancelled: 'İptal',
+        Completed: 'Tamamlandı'
+    };
+
+    const requesterLabel = {
+        Parent: 'Veli',
+        Student: 'Öğrenci',
+        Teacher: 'Öğretmen'
+    };
+
+    const requesterText = (reqType) => {
+        if (!reqType) return '-';
+        return requesterLabel[reqType] || reqType;
+    };
+
+    const asArray = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.$values)) return data.$values;
+        return [];
+    };
+
+    const showPageAlert = (text) => {
+        alertEl.textContent = text;
+        alertEl.classList.remove('d-none');
+    };
+
+    const hidePageAlert = () => alertEl.classList.add('d-none');
+
+    const fmtDateTime = (d, start, end) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        if (Number.isNaN(dt.getTime())) return '-';
+        let s = dt.toLocaleDateString('tr-TR');
+        const st = start ?? '';
+        const en = end ?? '';
+        if (st || en) {
+            const trim = (t) => {
+                if (!t) return '';
+                const parts = String(t).split(':');
+                if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+                return String(t);
+            };
+            s += ` ${trim(st)}${en ? ' – ' + trim(en) : ''}`;
+        }
+        return s;
+    };
+
+    const fmtCreated = (d) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        return Number.isNaN(dt.getTime()) ? '-' : dt.toLocaleString('tr-TR');
+    };
+
+    const filteredList = () => {
+        if (currentFilter === 'all') return allAppointments;
+        return allAppointments.filter(x => (x.status ?? x.Status) === currentFilter);
+    };
+
+    const updatePendingBadge = () => {
+        const n = allAppointments.filter(x => (x.status ?? x.Status) === 'Pending').length;
+        pendingBadge.textContent = `${n} bekleyen`;
+    };
+
+    const renderTable = () => {
+        const list = filteredList().slice().sort((a, b) => {
+            const da = new Date(a.createdAt ?? a.CreatedAt ?? 0).getTime();
+            const db = new Date(b.createdAt ?? b.CreatedAt ?? 0).getTime();
+            return db - da;
+        });
+
+        if (!list.length) {
+            const msg = currentFilter === 'Pending'
+                ? 'Bekleyen randevu talebi yok.'
+                : 'Kayıt bulunamadı.';
+            tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-4">${safeHtml(msg)}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = list.map(x => {
+            const id = x.id ?? x.Id;
+            const student = x.studentName ?? x.StudentName ?? '-';
+            const reqType = x.requesterType ?? x.RequesterType ?? '';
+            const status = x.status ?? x.Status ?? '-';
+            const notes = x.notes ?? x.Notes ?? '';
+            const created = x.createdAt ?? x.CreatedAt;
+            const apptDate = x.appointmentDate ?? x.AppointmentDate;
+            const start = x.startTime ?? x.StartTime;
+            const end = x.endTime ?? x.EndTime;
+            const isPending = status === 'Pending';
+
+            const planText = status === 'Scheduled'
+                ? fmtDateTime(apptDate, start, end)
+                : '-';
+
+            const action = isPending
+                ? `<button type="button" class="btn btn-sm btn-primary fw-semibold ta-schedule-btn" data-id="${id}">Onayla</button>`
+                : `<span class="text-muted small">—</span>`;
+
+            const statusBadge = isPending
+                ? '<span class="badge bg-warning text-dark">Bekliyor</span>'
+                : status === 'Scheduled'
+                    ? '<span class="badge bg-success">Planlandı</span>'
+                    : `<span class="badge bg-secondary">${safeHtml(statusLabel[status] ?? status)}</span>`;
+
+            return `
+                <tr data-appointment-id="${id}">
+                    <td class="fw-semibold">${safeHtml(student)}</td>
+                    <td>${safeHtml(requesterText(reqType))}</td>
+                    <td>${statusBadge}</td>
+                    <td class="text-muted small" style="max-width:180px">${safeHtml(notes || '—')}</td>
+                    <td class="text-muted small">${safeHtml(fmtCreated(created))}</td>
+                    <td class="small">${safeHtml(planText)}</td>
+                    <td class="text-end">${action}</td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    const loadAppointments = async () => {
+        hidePageAlert();
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-4">Yükleniyor...</td></tr>';
+        try {
+            const res = await fetch('/TeacherPanelProxy/Appointments', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) {
+                let err = '';
+                try { err = await res.text(); } catch { /* ignore */ }
+                throw new Error(err || `HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            allAppointments = asArray(data);
+            updatePendingBadge();
+            renderTable();
+        } catch (e) {
+            showPageAlert('Randevular yüklenemedi: ' + (e?.message || e));
+            tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-4">Yükleme başarısız.</td></tr>';
+        }
+    };
+
+    const openScheduleModal = (appointment) => {
+        const id = appointment.id ?? appointment.Id;
+        const student = appointment.studentName ?? appointment.StudentName ?? '';
+        const reqType = appointment.requesterType ?? appointment.RequesterType ?? '';
+        const notes = appointment.notes ?? appointment.Notes ?? '';
+
+        document.getElementById('taAppointmentId').value = id;
+        document.getElementById('taDate').value = '';
+        document.getElementById('taStart').value = '';
+        document.getElementById('taEnd').value = '';
+        document.getElementById('taTeacherNotes').value = '';
+        document.getElementById('taMeetingUrl').value = '';
+
+        modalSummary.textContent = `${student} — ${requesterText(reqType)}${notes ? '. Not: ' + notes : ''}`;
+        modalAlert.classList.add('d-none');
+        scheduleModal.show();
+    };
+
+    const timeToSpan = (input) => {
+        if (!input) return null;
+        const parts = input.split(':');
+        if (parts.length < 2) return null;
+        const h = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const s = (parts[2] ?? '00').padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    };
+
+    tbody?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.ta-schedule-btn');
+        if (!btn) return;
+        const id = Number(btn.dataset.id);
+        const item = allAppointments.find(x => (x.id ?? x.Id) === id);
+        if (item) openScheduleModal(item);
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+        modalAlert.classList.add('d-none');
+        const id = Number(document.getElementById('taAppointmentId').value);
+        const dateVal = document.getElementById('taDate').value;
+        const startVal = document.getElementById('taStart').value;
+        const endVal = document.getElementById('taEnd').value;
+
+        if (!id || !dateVal || !startVal || !endVal) {
+            modalAlert.textContent = 'Tarih, başlangıç ve bitiş saati zorunludur.';
+            modalAlert.classList.remove('d-none');
+            return;
+        }
+
+        if (endVal <= startVal) {
+            modalAlert.textContent = 'Bitiş saati başlangıçtan sonra olmalıdır.';
+            modalAlert.classList.remove('d-none');
+            return;
+        }
+
+        const payload = {
+            appointmentDate: dateVal + 'T00:00:00.000Z',
+            startTime: timeToSpan(startVal),
+            endTime: timeToSpan(endVal),
+            teacherNotes: document.getElementById('taTeacherNotes').value?.trim() || null,
+            meetingUrl: document.getElementById('taMeetingUrl').value?.trim() || null
+        };
+
+        confirmBtn.disabled = true;
+        try {
+            const res = await fetch(`/TeacherPanelProxy/ScheduleAppointment?id=${encodeURIComponent(id)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                let err = '';
+                try { err = await res.text(); } catch { /* ignore */ }
+                throw new Error(err || `HTTP ${res.status}`);
+            }
+
+            scheduleModal.hide();
+            await loadAppointments();
+        } catch (e) {
+            modalAlert.textContent = 'Onaylama başarısız: ' + (e?.message || e);
+            modalAlert.classList.remove('d-none');
+        } finally {
+            confirmBtn.disabled = false;
+        }
+    });
+
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            renderTable();
+        });
+    });
+
+    document.getElementById('taReloadBtn')?.addEventListener('click', loadAppointments);
+
+    const init = () => {
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            showPageAlert('Sayfa bileşenleri yüklenemedi. Sayfayı yenileyin.');
+            return;
+        }
+        scheduleModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        loadAppointments();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+}

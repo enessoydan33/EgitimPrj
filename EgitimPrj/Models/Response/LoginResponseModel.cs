@@ -5,6 +5,9 @@ namespace EgitimPrj.Models.Response
     public class LoginResponseModel
     {
         public int UserId { get; set; }
+
+        public int TeacherId { get; set; }
+
         public string Token { get; set; } = null!;
         public DateTime ExpiresAt { get; set; }
         public UserDto? User { get; set; }

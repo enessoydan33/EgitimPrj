@@ -1,6 +1,5 @@
-using System.Net;
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace EgitimPrj.Controllers
 {
@@ -9,7 +8,7 @@ namespace EgitimPrj.Controllers
     /// View'lar JavaScript ile bu controller'a istek atar, bu controller da
     /// istekleri arka plandaki CoMentor.API'ye iletir.
     /// </summary>
-    public class TeacherPanelProxyController : Controller
+    public class TeacherPanelProxyController : ProxyControllerBase
     {
         private readonly HttpClient _http;
         private readonly IConfiguration _configuration;
@@ -28,9 +27,8 @@ namespace EgitimPrj.Controllers
         public async Task<IActionResult> Classrooms()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{TeacherPanelBase}/classrooms");
-            AttachTeacherAuth(request);
-
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost]
@@ -41,8 +39,8 @@ namespace EgitimPrj.Controllers
             {
                 Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json")
             };
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost]
@@ -52,8 +50,8 @@ namespace EgitimPrj.Controllers
                 HttpMethod.Post,
                 $"{TeacherPanelBase}/classrooms/{classroomId}/students/{studentId}");
 
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpDelete]
@@ -63,8 +61,8 @@ namespace EgitimPrj.Controllers
                 HttpMethod.Delete,
                 $"{TeacherPanelBase}/classrooms/{classroomId}/students/{studentId}");
 
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -75,8 +73,8 @@ namespace EgitimPrj.Controllers
         public async Task<IActionResult> Announcements()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{TeacherPanelBase}/announcements");
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost]
@@ -87,8 +85,8 @@ namespace EgitimPrj.Controllers
             {
                 Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json")
             };
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -99,8 +97,8 @@ namespace EgitimPrj.Controllers
         public async Task<IActionResult> Homeworks()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{TeacherPanelBase}/homeworks");
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost]
@@ -121,8 +119,8 @@ namespace EgitimPrj.Controllers
             {
                 Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json")
             };
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
@@ -136,8 +134,8 @@ namespace EgitimPrj.Controllers
                 HttpMethod.Get,
                 $"{TeacherPanelBase}/classrooms/{classroomId}/performances");
 
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpPost]
@@ -153,8 +151,8 @@ namespace EgitimPrj.Controllers
             {
                 Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json")
             };
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpGet]
@@ -170,8 +168,8 @@ namespace EgitimPrj.Controllers
             }
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         [HttpGet]
@@ -182,52 +180,44 @@ namespace EgitimPrj.Controllers
         {
             var url = $"{TeacherPanelBase}/classrooms/{classroomId}/students/{studentId}/trial-exams/{trialId}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
-            AttachTeacherAuth(request);
-            return await Send(request);
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
         #endregion
 
-        private async Task<IActionResult> Send(HttpRequestMessage request)
+        #region Appointments
+
+        [HttpGet]
+        public async Task<IActionResult> Appointments()
         {
-            try
-            {
-                var response = await _http.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
+            var denied = RequireSessionBearer("TeacherToken", "Öğretmen oturumunda token yok. Lütfen tekrar giriş yapın.");
+            if (denied != null)
+                return denied;
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var contentType = response.Content.Headers.ContentType?.MediaType;
-                    if (contentType != null && contentType.Contains("application/json"))
-                    {
-                        return Content(body, "application/json");
-                    }
-
-                    return Content(body, contentType ?? "text/plain");
-                }
-
-                Console.WriteLine("API ERROR: " + response.StatusCode + " - " + body);
-                return StatusCode((int)response.StatusCode, new { error = true, details = body });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("PROXY EXCEPTION: " + ex.ToString());
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { error = true, details = ex.Message });
-            }
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{TeacherPanelBase}/appointments");
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
 
-        private void AttachTeacherAuth(HttpRequestMessage request)
+        [HttpPut]
+        public async Task<IActionResult> ScheduleAppointment(int id, [FromBody] System.Text.Json.JsonElement body)
         {
-            // Öğretmen JWT token'ı için ayrı bir session anahtarı kullanıyoruz
-            var token = HttpContext.Session.GetString("TeacherToken");
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
+            var denied = RequireSessionBearer("TeacherToken", "Öğretmen oturumunda token yok. Lütfen tekrar giriş yapın.");
+            if (denied != null)
+                return denied;
 
-            // Ngrok uyarısını bastıran header, diğer proxy controller'larla aynı
-            request.Headers.Add("ngrok-skip-browser-warning", "true");
+            var jsonString = System.Text.Json.JsonSerializer.Serialize(body);
+            var request = new HttpRequestMessage(HttpMethod.Put, $"{TeacherPanelBase}/appointments/{id}/schedule")
+            {
+                Content = new StringContent(jsonString, Encoding.UTF8, "application/json")
+            };
+            AttachAuth(request, "TeacherToken");
+            return await SendProxyAsync(_http, request);
         }
+
+        #endregion
+
     }
 }
 

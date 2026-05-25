@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "Mesajlar";
+}
+
+<div class="parent-summary-page">
+    <div class="modern-page-header header-parent mb-4">
+        <div class="modern-header-content">
+            <div class="modern-header-icon"><i class="bi bi-envelope-paper"></i></div>
+            <div class="modern-header-text">
+                <h1>Veli Mesajları</h1>
+                <p>Öğretmenlerinizden gelen bildirimler</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="parent-panel-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5 class="parent-panel-title mb-0">Mesajlar</h5>
+            <button class="btn btn-sm parent-panel-outline-btn" id="hwReloadBtn" type="button">
+                <i class="bi bi-arrow-clockwise me-1"></i>Yenile
+            </button>
+        </div>
+
+        <div id="hwAlert" class="alert alert-danger d-none"></div>
+
+        <div class="table-responsive rounded-3 border" style="border-color: #e5e7eb !important;">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Başlık</th>
+                        <th>Mesaj</th>
+                        <th>Öğretmen</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody id="hwTbody">
+                    <tr><td colspan="4" class="text-muted py-4">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const { safeHtml, fetchJson, setVisible } = window.AppUtils;
+
+    const tbody = document.getElementById('hwTbody');
+    const alertEl = document.getElementById('hwAlert');
+    const reloadBtn = document.getElementById('hwReloadBtn');
+
+    const asArray = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.messages)) return data.messages;
+        if (Array.isArray(data?.Messages)) return data.Messages;
+        if (Array.isArray(data?.$values)) return data.$values;
+        return [];
+    };
+
+    const fmtDate = (d) => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        if (Number.isNaN(dt.getTime())) return '-';
+        return dt.toLocaleString('tr-TR');
+    };
+
+    const render = (list) => {
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">Mesaj bulunamadı.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(x => {
+            const title = x.title ?? x.Title ?? 'Mesaj';
+            const msg = x.message ?? x.Message ?? '';
+            const teacher = x.teacherName ?? x.TeacherName ?? '-';
+            const createdAt = x.createdAt ?? x.CreatedAt;
+
+            return `
+                <tr>
+                    <td class="fw-semibold">${safeHtml(title)}</td>
+                    <td class="text-muted">${safeHtml(msg || '-')}</td>
+                    <td>${safeHtml(teacher)}</td>
+                    <td>${safeHtml(fmtDate(createdAt))}</td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    const load = async () => {
+        setVisible(alertEl, false);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">Yükleniyor...</td></tr>';
+        try {
+            const data = await fetchJson('/ParentPanelProxy/messages');
+            render(asArray(data));
+        } catch (e) {
+            alertEl.textContent = 'Mesajlar yüklenirken hata oluştu: ' + (e?.message || e);
+            alertEl.classList.remove('d-none');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">Yükleme başarısız.</td></tr>';
+        }
+    };
+
+    reloadBtn?.addEventListener('click', load);
+    document.addEventListener('DOMContentLoaded', load);
+})();
+</script>
+}

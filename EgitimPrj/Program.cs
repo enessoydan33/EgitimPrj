@@ -1,8 +1,18 @@
+using EgitimPrj.Services.ExamUpload;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IPdfExamTextExtractor, PdfExamTextExtractor>();
+builder.Services.AddScoped<IPdfExamResultLineParser, PdfExamResultLineParser>();
+builder.Services.AddScoped<IExamStudentMatcher, ExamStudentMatcher>();
+builder.Services.AddScoped<ITeacherPanelStudentDirectoryService, TeacherPanelStudentDirectoryService>();
+builder.Services.AddScoped<IExamTrialExamApiSaver, ExamTrialExamApiSaver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession(options =>
 {
@@ -21,10 +31,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseSession();
-
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthorization();
 

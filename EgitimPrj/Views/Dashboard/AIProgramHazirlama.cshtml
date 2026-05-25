@@ -4,7 +4,6 @@
 
 <div class="ai-detail-container">
     <!-- Üst Başlık -->
-    <!-- Üst Başlık -->
     <div class="modern-page-header header-ai mb-4">
         <div class="modern-header-content">
             <a asp-action="AIWork" asp-controller="Dashboard" class="btn btn-light rounded-circle shadow-sm me-3" style="width: 48px; height: 48px; display:flex; align-items:center; justify-content:center;">
@@ -44,6 +43,15 @@
         </div>
         <div class="section-body shadow-soft">
             <ul class="nav nav-pills flex-wrap gap-2 mb-3" id="dayTabs"></ul>
+            
+            <div class="d-flex flex-wrap gap-2 mb-3 pb-3 border-bottom">
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="selectAllHours()"><i class="bi bi-check-all"></i> Tümünü Seç</button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="clearAllHours()"><i class="bi bi-x"></i> Temizle</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="selectTimeRange(8, 12)"><i class="bi bi-sun"></i> Sabah (08-12)</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="selectTimeRange(13, 17)"><i class="bi bi-brightness-high"></i> Öğle (13-17)</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="selectTimeRange(18, 22)"><i class="bi bi-moon"></i> Akşam (18-22)</button>
+            </div>
+
             <div id="hoursGrid" class="d-flex flex-wrap gap-2"></div>
             <div class="small text-muted mt-3"><span id="selHoursCount">0</span> saat seçildi.</div>
         </div>
@@ -96,6 +104,19 @@
 
 @section Scripts {
     <script>
+        const fetchJson = window.AppUtils?.fetchJson ?? (async (url, options) => {
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                throw new Error(text || `HTTP ${res.status}`);
+            }
+            return res.json();
+        });
+        const setText = window.AppUtils?.setText ?? ((id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value ?? '';
+        });
+
         const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
         const HOURS = Array.from({ length: 18 }, (_, i) => 6 + i);
 
@@ -346,21 +367,9 @@
 
         // SS'deki "Ders Seçimi" kart sırası
         const COURSE_ORDER = [
-            "Türkçe",
-            "Matematik",
-            "Fen Bilimleri",
-            "Sosyal Bilimler",
-            "AYT Matematik",
-            "Fizik",
-            "Kimya",
-            "Biyoloji",
-            "Edebiyat",
-            "Tarih-1",
-            "Coğrafya-1",
-            "Tarih-2",
-            "Coğrafya-2",
-            "Felsefe Grubu",
-            "Din Kültürü"
+            "Türkçe", "Matematik", "Fen Bilimleri", "Sosyal Bilimler", "AYT Matematik", "Fizik",
+            "Kimya", "Biyoloji", "Edebiyat", "Tarih-1", "Coğrafya-1", "Tarih-2", "Coğrafya-2",
+            "Felsefe Grubu", "Din Kültürü"
         ];
         function getCourseOrderIndex(courseName) {
             const n = (courseName || '').toLowerCase();
@@ -385,7 +394,8 @@
         function isAllowedCourseForSelection(courseName) {
             const n = normalizeTurkish(courseName);
             if (n.includes('yabanci') || n.includes('yabancı')) return false;
-            return true;
+
+            return true; // Allows all others
         }
 
         let currentStep = 1;
@@ -416,6 +426,11 @@
 
         function timeLabel(h) { return String(h).padStart(2, '0') + ":00"; }
         function countAllHours() { return Object.values(hoursByDay).reduce((a, b) => a + b.length, 0); }
+        function refreshHourSelectionUi() {
+            setText('selHoursCount', countAllHours());
+            renderHours();
+            validateNext();
+        }
 
         function renderDayTabs() {
             dayTabs.innerHTML = '';
@@ -440,12 +455,32 @@
                     const i = arr.indexOf(h);
                     if (i >= 0) arr.splice(i, 1); else arr.push(h);
                     arr.sort((a, b) => a - b);
-                    selHoursCount.textContent = countAllHours();
-                    renderHours(); validateNext();
+                    refreshHourSelectionUi();
                 };
                 hoursGrid.appendChild(b);
             });
-            selHoursCount.textContent = countAllHours();
+            setText('selHoursCount', countAllHours());
+        }
+
+        function selectAllHours() {
+            hoursByDay[activeDay] = [...HOURS];
+            refreshHourSelectionUi();
+        }
+        
+        function clearAllHours() {
+            hoursByDay[activeDay] = [];
+            refreshHourSelectionUi();
+        }
+        
+        function selectTimeRange(start, end) {
+            const arr = hoursByDay[activeDay];
+            HOURS.forEach(h => {
+                if (h >= start && h <= end) {
+                    if (!arr.includes(h)) arr.push(h);
+                }
+            });
+            arr.sort((a, b) => a - b);
+            refreshHourSelectionUi();
         }
 
         function renderCourses() {
@@ -465,11 +500,11 @@
                     if (selectedCourses.has(name)) selectedCourses.delete(name);
                     else selectedCourses.add(name);
                     renderCourses(); renderTopics();
-                    selCourseCount.textContent = selectedCourses.size; validateNext();
+                    setText('selCourseCount', selectedCourses.size); validateNext();
                 };
                 col.appendChild(card); courseGrid.appendChild(col);
             });
-            selCourseCount.textContent = selectedCourses.size;
+            setText('selCourseCount', selectedCourses.size);
         }
 
         function renderTopics() {
@@ -576,31 +611,24 @@
 
             try {
                 // Tek fetch: AI üret + Pomodoro'ya kaydet
-                const res = await fetch('/api/StudyScheduleProxy/GenerateAndSave', {
+                const result = await fetchJson('/api/StudyScheduleProxy/GenerateAndSave', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (res.ok) {
-                    const result = await res.json();
-                    const saved = result.saved || result.Saved || 0;
+                const saved = result.saved || result.Saved || 0;
 
-                    aiFeedback.innerHTML = `
-                        <div class="text-success fw-bold fs-5">
-                            <i class="bi bi-check-circle-fill me-2"></i>
-                            ${saved > 0 ? saved + ' etüt takvime eklendi!' : 'Program oluşturuldu!'}
-                        </div>
-                        <div class="text-muted small mt-1">Takvim sayfasına yönlendiriliyorsunuz...</div>`;
+                aiFeedback.innerHTML = `
+                    <div class="text-success fw-bold fs-5">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ${saved > 0 ? saved + ' etüt takvime eklendi!' : 'Program oluşturuldu!'}
+                    </div>
+                    <div class="text-muted small mt-1">Takvim sayfasına yönlendiriliyorsunuz...</div>`;
 
-                    setTimeout(() => {
-                        window.location.href = '/Dashboard/Schedule';
-                    }, 2000);
-
-                } else {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
+                setTimeout(() => {
+                    window.location.href = '/Dashboard/Schedule';
+                }, 2000);
             } catch(e) {
                 console.error(e);
                 aiFeedback.innerHTML = `
@@ -612,36 +640,36 @@
         };
 
         // Arka uçtan dinamik ders listesini çek ve Fallback topics ekle
+        function findFallbackTopicKey(courseName) {
+            let matchedKey = "Varsayılan";
+            const lowerName = (courseName || '').toLowerCase();
+            for (const key of Object.keys(FALLBACK_TOPICS)) {
+                if (key === "Varsayılan") continue;
+                if (lowerName.includes(key.toLowerCase())) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+            return matchedKey;
+        }
+
         async function initSubjects() {
             try {
                 // Dersleri backend'in Subject API'sinden Exam Controller aracılığıyla alıyoruz
-                const res = await fetch('/Exam/Subjects');
-                if(res.ok) {
-                    const subjects = await res.json();
+                const subjects = await fetchJson('/Exam/Subjects');
+                
+                if(subjects && subjects.length > 0) {
+                    ALL_COURSES = {};
                     
-                    if(subjects && subjects.length > 0) {
-                        ALL_COURSES = {};
-                        
-                        subjects.forEach(s => {
-                            const name = s.Name || s.name;
-                            const id = s.Id || s.id;
-                            if (!isAllowedCourseForSelection(name)) return;
-                            
-                            // Genellikle API ders adları için FallbackTopic eşleşen isim bul
-                            let matchedKey = "Varsayılan";
-                            const lowerName = name.toLowerCase();
-                            for (const key of Object.keys(FALLBACK_TOPICS)) {
-                                if (key === "Varsayılan") continue;
-                                if (lowerName.includes(key.toLowerCase())) {
-                                    matchedKey = key;
-                                    break;
-                                }
-                            }
+                    subjects.forEach(s => {
+                        const name = s.Name || s.name;
+                        const id = s.Id || s.id;
+                        if (!isAllowedCourseForSelection(name)) return;
 
-                            ALL_COURSES[name] = FALLBACK_TOPICS[matchedKey];
-                            subjectIds[name] = id;
-                        });
-                    }
+                        const matchedKey = findFallbackTopicKey(name);
+                        ALL_COURSES[name] = FALLBACK_TOPICS[matchedKey];
+                        subjectIds[name] = id;
+                    });
                 }
             } catch (err) {
                 console.error("Dersler backend'den alınırken hata oluştu, varsayılanlar yükleniyor.", err);

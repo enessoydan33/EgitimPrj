@@ -60,7 +60,7 @@
 
     <!-- ===== HIZLI ERİŞİM KARTLARI ===== -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
+        <div class="col-lg-3 col-md-6">
             <a asp-action="TeacherHomework" class="text-decoration-none">
                 <div class="nav-card nav-card-hw">
                     <div class="nav-card-icon">
@@ -74,7 +74,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-lg-3 col-md-6">
             <a asp-action="TeacherAnnouncement" class="text-decoration-none">
                 <div class="nav-card nav-card-info">
                     <div class="nav-card-icon">
@@ -88,8 +88,8 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-4">
-            <a asp-action="TeacherExam" class="text-decoration-none">
+        <div class="col-lg-3 col-md-6">
+            <a asp-controller="ExamUpload" asp-action="Index" class="text-decoration-none">
                 <div class="nav-card nav-card-exam">
                     <div class="nav-card-icon">
                         <i class="bi bi-journal-check"></i>
@@ -98,6 +98,20 @@
                     <p class="nav-card-desc">Öğrencilerinizin TYT/AYT deneme sonuçlarını girin ve takip edin.</p>
                     <span class="btn btn-gradient-exam w-100 fw-bold">
                         <i class="bi bi-journal-plus me-1"></i>Deneme Sayfası
+                    </span>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <a asp-action="TeacherAppointments" class="text-decoration-none">
+                <div class="nav-card nav-card-info">
+                    <div class="nav-card-icon">
+                        <i class="bi bi-calendar2-check-fill"></i>
+                    </div>
+                    <h5 class="nav-card-title">Randevu Talepleri</h5>
+                    <p class="nav-card-desc">Veli ve öğrenci randevu taleplerini görüntüleyin, tarih atayarak onaylayın.</p>
+                    <span class="btn btn-gradient-info w-100 fw-bold">
+                        <i class="bi bi-calendar-check me-1"></i>Randevular
                     </span>
                 </div>
             </a>
@@ -250,183 +264,6 @@
 
 </div><!-- /teacher-panel-container -->
 
-@section Styles {
-<style>
-    /* ===== ANIMASYON ===== */
-    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
-    @@keyframes fadeInUp {
-        from { opacity:0; transform:translateY(20px); }
-        to   { opacity:1; transform:translateY(0); }
-    }
-
-    /* ===== STAT CARDS ===== */
-    .stat-card-teacher {
-        background:#fff; border-radius:20px;
-        border:1px solid rgba(226,232,240,.8);
-        padding:1.1rem 1.25rem;
-        display:flex; align-items:center; gap:.9rem;
-        box-shadow:0 4px 15px rgba(0,0,0,.03);
-        transition:transform .3s,box-shadow .3s;
-    }
-    .stat-card-teacher:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.07); }
-    .stat-icon {
-        width:50px; height:50px; border-radius:14px;
-        display:flex; align-items:center; justify-content:center;
-        font-size:1.35rem; flex-shrink:0;
-    }
-    .bg-primary-soft{background:#e0e7ff} .bg-success-soft{background:#dcfce7}
-    .bg-warning-soft{background:#fef9c3} .bg-danger-soft{background:#fee2e2}
-    .stat-value { font-size:1.6rem; font-weight:800; color:#1e293b; line-height:1; }
-    .stat-label  { font-size:.75rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-top:4px; }
-
-    /* ===== NAV CARDS ===== */
-    .nav-card {
-        background:#fff; border-radius:28px;
-        border:1px solid rgba(226,232,240,.8);
-        box-shadow:0 10px 30px rgba(0,0,0,.03);
-        padding:2.8rem 2rem; text-align:center;
-        transition:transform .3s,box-shadow .3s;
-        height:100%;
-    }
-    .nav-card:hover { transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,.08); }
-    .nav-card-icon {
-        width:84px; height:84px; border-radius:22px;
-        display:inline-flex; align-items:center; justify-content:center;
-        font-size:2.2rem; margin-bottom:1.25rem;
-    }
-    .nav-card-hw .nav-card-icon { background:#e0e7ff; color:#4f46e5; }
-    .nav-card-info .nav-card-icon { background:#e0f2fe; color:#0284c7; }
-    .nav-card-exam .nav-card-icon { background:#fff7ed; color:#ea580c; }
-    .nav-card-title { font-weight:800; color:#1e293b; font-size:1.35rem; margin-bottom:.6rem; }
-    .nav-card-desc { font-size:1rem; color:#64748b; margin-bottom:1.5rem; line-height:1.6; }
-
-    /* ===== HEADER ===== */
-    .header-teacher { background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); }
-
-    /* ===== GRADIENT BUTTONS ===== */
-    .btn-gradient-primary {
-        background:linear-gradient(135deg,#4f46e5 0%,#6366f1 100%);
-        border:none; color:#fff; border-radius:12px;
-        font-size:.95rem; letter-spacing:.5px;
-        transition:filter .3s,transform .2s;
-    }
-    .btn-gradient-primary:hover { filter:brightness(110%); transform:translateY(-2px); color:#fff; }
-
-    .btn-gradient-info {
-        background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);
-        border:none; color:#fff; border-radius:12px;
-        font-size:.95rem; letter-spacing:.5px;
-        transition:filter .3s,transform .2s;
-    }
-    .btn-gradient-info:hover { filter:brightness(110%); transform:translateY(-2px); color:#fff; }
-
-    .btn-gradient-exam {
-        background:linear-gradient(135deg,#ea580c 0%,#f97316 100%);
-        border:none; color:#fff; border-radius:12px;
-        font-size:.95rem; letter-spacing:.5px;
-        transition:filter .3s,transform .2s;
-    }
-    .btn-gradient-exam:hover { filter:brightness(110%); transform:translateY(-2px); color:#fff; }
-
-    /* ===== SINIF / ÖĞRENCİ YÖNETİM KARTI ===== */
-    .glass-card-manage {
-        background:#fff; border-radius:24px;
-        border:1px solid rgba(226,232,240,.8);
-        box-shadow:0 10px 30px rgba(0,0,0,.03);
-        transition:transform .3s,box-shadow .3s;
-    }
-    .glass-card-manage:hover {
-        transform:translateY(-4px);
-        box-shadow:0 20px 40px rgba(0,0,0,.06);
-    }
-    .icon-box-manage {
-        width:44px; height:44px; background:#e0f2fe; color:#0284c7;
-        border-radius:12px; display:flex; align-items:center;
-        justify-content:center; font-size:1.1rem; flex-shrink:0;
-    }
-    .icon-box-student { background:#dcfce7; color:#16a34a; }
-    .icon-box-list { background:#fef9c3; color:#ca8a04; }
-    .form-label-manage {
-        font-size:.8rem; font-weight:700; text-transform:uppercase;
-        letter-spacing:.5px; color:#64748b; margin-bottom:.3rem; display:block;
-    }
-    .form-control-modern, .form-select-modern {
-        border:2px solid #e2e8f0; border-radius:12px;
-        padding:.6rem .9rem; font-size:.95rem; color:#1e293b;
-        background:#f8fafc; transition:all .3s;
-    }
-    .form-control-modern:focus, .form-select-modern:focus {
-        background:#fff; border-color:#4f46e5;
-        box-shadow:0 0 0 4px rgba(79,70,229,.1); outline:none;
-    }
-    #manage-class-feedback.text-success,
-    #create-classroom-feedback.text-success {
-        color:#16a34a !important;
-    }
-    #manage-class-feedback.text-danger,
-    #create-classroom-feedback.text-danger {
-        color:#dc2626 !important;
-    }
-
-    /* ===== ÖĞRENCİ LİSTE TABLOSU ===== */
-    .table-student-list {
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    .table-student-list thead th {
-        background: #f8fafc;
-        border-bottom: 2px solid #e2e8f0;
-        color: #64748b;
-        font-size: .75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        padding: .75rem 1rem;
-    }
-    .table-student-list tbody tr {
-        transition: background .2s;
-    }
-    .table-student-list tbody tr:hover {
-        background: #f1f5f9;
-    }
-    .table-student-list tbody td {
-        padding: .85rem 1rem;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: .92rem;
-        color: #334155;
-    }
-    .student-avatar-sm {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: .85rem;
-        margin-right: .6rem;
-        flex-shrink: 0;
-    }
-    .btn-remove-student {
-        background: #fee2e2;
-        color: #dc2626;
-        border: none;
-        border-radius: 10px;
-        padding: .4rem .7rem;
-        font-size: .8rem;
-        font-weight: 600;
-        transition: all .2s;
-        cursor: pointer;
-    }
-    .btn-remove-student:hover {
-        background: #dc2626;
-        color: #fff;
-        transform: scale(1.05);
-    }
-</style>
-}
-
 @section Scripts {
 <script>
 async function tpApiGet(url) {
@@ -563,8 +400,9 @@ async function loadDashboardStats() {
 async function loadClassroomsForManage(keepSelectedId) {
     const select = document.getElementById('manage-class-classroom');
     if (!select) return;
-    // Eğer keepSelectedId verilmediyse, şu anki seçimi koru
-    const selectedId = keepSelectedId || select.value;
+    // Eğer keepSelectedId verilmediyse, ilk sınıfı otomatik seç (sayfa ilk açılışı)
+    const shouldAutoSelectFirst = !keepSelectedId;
+    let selectedId = keepSelectedId || select.value;
     try {
         const data = await tpApiGet('/TeacherPanelProxy/Classrooms');
         const classrooms = Array.isArray(data) ? data : [];
@@ -576,9 +414,18 @@ async function loadClassroomsForManage(keepSelectedId) {
             opt.textContent = `${c.name || 'Sınıf #' + c.id} (${c.studentCount || 0} öğrenci)`;
             select.appendChild(opt);
         });
-        // Önceki seçimi geri yükle
+
+        // Önceki seçimi geri yükle; yoksa ilk sınıfı otomatik seç
         if (selectedId) {
             select.value = selectedId;
+        } else if (shouldAutoSelectFirst && classrooms.length > 0) {
+            selectedId = classrooms[0]?.id;
+            if (selectedId) select.value = selectedId;
+        }
+
+        // İlk yüklemede sınıf seçilip otomatik öğrenci listesi gelsin
+        if (shouldAutoSelectFirst && selectedId) {
+            await loadClassroomStudents(parseInt(selectedId, 10));
         }
     } catch (err) {
         console.error('Sınıflar yüklenemedi', err);
@@ -657,13 +504,25 @@ async function loadClassroomStudents(classroomId) {
 
             const initials = getInitials(s.studentName || '');
             const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', (ev) => {
+                // "Çıkar" butonuna tıklayınca yönlendirme yapma
+                if (ev.target && ev.target.closest && ev.target.closest('.btn-remove-student')) return;
+                window.location.href = `/Teacher/StudentProfile/${encodeURIComponent(s.studentId)}?classroomId=${encodeURIComponent(classroomId)}`;
+            });
             tr.innerHTML = `
                 <td class="text-muted fw-semibold">${idx + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
                         <span class="student-avatar-sm">${initials}</span>
                         <div>
-                            <div class="fw-semibold">${escapeHtml(s.studentName || 'Bilinmiyor')}</div>
+                            <div class="fw-semibold">
+                                <a href="/Teacher/StudentProfile/${encodeURIComponent(s.studentId)}?classroomId=${encodeURIComponent(classroomId)}"
+                                   class="text-decoration-none"
+                                   onclick="event.stopPropagation();">
+                                    ${escapeHtml(s.studentName || 'Bilinmiyor')}
+                                </a>
+                            </div>
                             <div class="text-muted" style="font-size:.78rem;">ID: ${s.studentId}</div>
                         </div>
                     </div>
@@ -677,7 +536,7 @@ async function loadClassroomStudents(classroomId) {
                     </span>
                 </td>
                 <td class="text-center">
-                    <button class="btn-remove-student" onclick="removeStudentFromClassroom(${classroomId}, ${s.studentId})" title="Sınıftan çıkar">
+                    <button class="btn-remove-student" onclick="event.stopPropagation(); removeStudentFromClassroom(${classroomId}, ${s.studentId})" title="Sınıftan çıkar">
                         <i class="bi bi-person-dash me-1"></i>Çıkar
                     </button>
                 </td>

@@ -1,0 +1,482 @@
+@using System
+@{
+    ViewData["Title"] = "Veli Özeti";
+    var isParentViewer = string.Equals(Context.Session.GetString("IsParentLoggedIn"), "true", StringComparison.OrdinalIgnoreCase);
+    var displayName = Context.Session.GetString("Name") ?? "Öğrenci";
+}
+
+<div class="parent-summary-page" data-parent-viewer="@(isParentViewer ? "true" : "false")">
+    <div class="modern-page-header header-parent mb-4">
+        <div class="modern-header-content">
+            <div class="modern-header-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="modern-header-text">
+                <h1>Veli Bilgilendirme</h1>
+                <p>Öğrencinin güncel çalışma ve deneme performans özeti</p>
+            </div>
+        </div>
+        <div class="modern-header-decoration"></div>
+    </div>
+
+    <div class="parent-hello-card mb-4">
+        <h3 id="parentHelloTitle">Merhaba, @displayName velisi</h3>
+        <p id="parentAiSummaryText" class="mb-0 text-muted">Haftalık özet hazırlanıyor...</p>
+    </div>
+
+    <div class="parent-ai-card mb-4">
+        <div class="d-flex align-items-start gap-3">
+            <div class="parent-ai-icon"><i class="bi bi-stars"></i></div>
+            <div>
+                <h5 class="mb-1">CoMentor AI Haftalık Özet</h5>
+                <p id="parentAiCoachText" class="mb-0 text-muted">Veriler analiz ediliyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="parent-chart-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">Deneme Sınavı İlerlemesi</h4>
+            <i class="bi bi-graph-up-arrow text-success"></i>
+        </div>
+        <div id="trialChartWrap" class="trial-chart-wrap">
+            <div class="text-muted small">Grafik hazırlanıyor...</div>
+        </div>
+    </div>
+
+    <div class="parent-upcoming-card mb-4 d-none" id="parentTrialsSection">
+        <h4 class="mb-3">Denemeler — ders netleri</h4>
+        <p class="text-muted small mb-3">Özet listeden bir denemeyi seçerek ders bazında doğru / yanlış / boş ve net bilgisini görüntüleyin.</p>
+        <div id="parentTrialsTableWrap" class="table-responsive rounded-3 border" style="border-color: #e5e7eb !important;">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tarih / etiket</th>
+                        <th>Tür</th>
+                        <th class="text-end">Toplam</th>
+                        <th class="text-end" style="width:7rem">Detay</th>
+                    </tr>
+                </thead>
+                <tbody id="parentTrialsTbody">
+                    <tr><td colspan="4" class="text-muted py-3">Denemeler yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="parentTrialDetailModal" tabindex="-1" aria-labelledby="parentTrialDetailTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="parentTrialDetailTitle">Deneme detayı</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body" id="parentTrialDetailBody">
+                    <div class="text-muted small">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="parent-mini-stat">
+                <div class="label">Toplam Deneme</div>
+                <div class="value" id="parentTotalTrials">-</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="parent-mini-stat">
+                <div class="label">Bu Hafta Çalışma</div>
+                <div class="value" id="parentWeekMinutes">- dk</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="parent-mini-stat">
+                <div class="label">Toplam XP</div>
+                <div class="value" id="parentTotalXp">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="parent-upcoming-card">
+        <h4 class="mb-3">Yaklaşan Etütler</h4>
+        <div id="upcomingList" class="d-flex flex-column gap-2">
+            <div class="text-muted small">Yaklaşan planlar yükleniyor...</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const fetchJson = window.AppUtils?.fetchJson ?? (async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    });
+    const safeHtml = window.AppUtils?.safeHtml ?? ((value) => String(value ?? '')
+        .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;').replaceAll("'", '&#39;'));
+    const normalizeWeeklySchedulePayload = window.AppUtils?.normalizeWeeklySchedulePayload ?? ((data) => {
+        if (!data || !Array.isArray(data) || data.length === 0) return [];
+        const first = data[0];
+        if (first && (Array.isArray(first.schedules) || Array.isArray(first.Schedules))) return data;
+        const byDay = new Map();
+        for (const s of data) {
+            const dow = Number(s.dayOfWeek ?? s.DayOfWeek ?? 0);
+            if (!byDay.has(dow)) byDay.set(dow, { dayOfWeek: dow, schedules: [] });
+            byDay.get(dow).schedules.push(s);
+        }
+        return Array.from(byDay.values()).sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+    });
+
+    const fmtNet = (v) => Number(v || 0).toFixed(1);
+    const dayNames = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+
+    function setText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+
+    function getNextDateForDay(dayOfWeek, timeText) {
+        const now = new Date();
+        const [hh, mm] = (timeText || "00:00").substring(0, 5).split(':').map(Number);
+        const target = new Date(now);
+        const diff = (Number(dayOfWeek) - now.getDay() + 7) % 7;
+        target.setDate(now.getDate() + diff);
+        target.setHours(hh || 0, mm || 0, 0, 0);
+        if (target < now) target.setDate(target.getDate() + 7);
+        return target;
+    }
+
+    function buildCoachSummary(stats, pomodoro, xp) {
+        const avg = Number(stats?.averageNet ?? stats?.AverageNet ?? 0);
+        const best = Number(stats?.highestNet ?? stats?.HighestNet ?? 0);
+        const change = Number(stats?.lastChange ?? stats?.LastChange ?? 0);
+        const weekMin = Number(pomodoro?.weekMinutes ?? pomodoro?.WeekMinutes ?? 0);
+        const totalXp = Number(xp?.totalXp ?? xp?.TotalXp ?? 0);
+
+        const trendText = change > 0 ? "yukarı yönlü" : (change < 0 ? "düşüş eğiliminde" : "stabil");
+        const activityText = weekMin >= 300 ? "çok iyi" : (weekMin >= 150 ? "iyi" : "geliştirilmeli");
+        return `Öğrencinin ortalama neti ${fmtNet(avg)}, en yüksek neti ${fmtNet(best)}. Son deneme trendi ${trendText}. Bu hafta ${weekMin} dakika çalışma ile tempo ${activityText}. Toplam XP: ${totalXp}.`;
+    }
+
+    function renderTrialChart(trialsRaw, containerId = 'trialChartWrap', strokeColor = '#3b82f6', areaRgb = '59,130,246') {
+        const wrap = document.getElementById(containerId);
+        if (!wrap) return;
+
+        const gradId = 'parentGrad_' + containerId.replace(/[^a-zA-Z0-9]/g, '_');
+
+        const trials = (trialsRaw || [])
+            .map(t => ({
+                date: new Date(t.examDate || t.ExamDate),
+                net: Number(t.totalNet ?? t.TotalNet ?? 0),
+                type: (t.examType || t.ExamType || '').toString()
+            }))
+            .filter(x => !Number.isNaN(x.date.getTime()))
+            .sort((a, b) => a.date - b.date)
+            .slice(-8);
+
+        if (trials.length < 2) {
+            wrap.innerHTML = '<div class="text-muted small">Grafik için en az 2 deneme kaydı gerekli.</div>';
+            return;
+        }
+
+        const W = 560, H = 220, left = 24, top = 12, right = 12, bottom = 24;
+        const innerW = W - left - right, innerH = H - top - bottom;
+        const vals = trials.map(x => x.net);
+        const min = Math.min(...vals) - 2;
+        const max = Math.max(...vals) + 2;
+        const toX = (i) => left + (innerW * (i / (trials.length - 1)));
+        const toY = (v) => top + innerH * (1 - ((v - min) / ((max - min) || 1)));
+        const poly = trials.map((t, i) => `${toX(i).toFixed(1)},${toY(t.net).toFixed(1)}`).join(' ');
+        const area = `${left},${top + innerH} ${poly} ${left + innerW},${top + innerH}`;
+
+        wrap.innerHTML = `
+            <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:220px" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(${areaRgb},.35)"></stop>
+                        <stop offset="100%" stop-color="rgba(${areaRgb},0)"></stop>
+                    </linearGradient>
+                </defs>
+                <path d="M ${area}" fill="url(#${gradId})"></path>
+                <polyline points="${poly}" fill="none" stroke="${strokeColor}" stroke-width="3"></polyline>
+                ${trials.map((t, i) => `<circle cx="${toX(i).toFixed(1)}" cy="${toY(t.net).toFixed(1)}" r="4" fill="${strokeColor}" stroke="#fff" stroke-width="2"></circle>`).join('')}
+            </svg>
+            <div class="trial-chart-meta">
+                Son ${trials.length} deneme ortalaması: <strong>${fmtNet(vals.reduce((a,b)=>a+b,0)/vals.length)}</strong> net
+            </div>
+        `;
+    }
+
+    function splitParentTrialsByExamType(trialExams) {
+        const tyt = [];
+        const ayt = [];
+        for (const t of (Array.isArray(trialExams) ? trialExams : [])) {
+            const kind = (t.examType ?? t.ExamType ?? '').toString().trim().toUpperCase();
+            if (kind === 'AYT') ayt.push(t);
+            else tyt.push(t);
+        }
+        return { tyt, ayt };
+    }
+
+    function mapParentGroupForChart(items) {
+        const n = items.length;
+        const now = new Date();
+        return items.map((t, i) => {
+            const d = new Date(now);
+            d.setDate(d.getDate() - (n - 1 - i) * 7);
+            return {
+                examDate: d.toISOString(),
+                totalNet: Number(t.totalScore ?? t.TotalScore ?? 0)
+            };
+        });
+    }
+
+    function renderParentTrialChartsSplit(tyt, ayt) {
+        const wrap = document.getElementById('trialChartWrap');
+        if (!wrap) return;
+
+        const tytSeries = mapParentGroupForChart(tyt);
+        const aytSeries = mapParentGroupForChart(ayt);
+
+        wrap.innerHTML = `
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Deneme türü">
+                <button type="button" class="btn btn-sm rounded-pill px-3 parent-exam-tab-btn" data-exam-tab="tyt">
+                    <i class="bi bi-journal-text me-1"></i>TYT
+                </button>
+                <button type="button" class="btn btn-sm rounded-pill px-3 parent-exam-tab-btn" data-exam-tab="ayt">
+                    <i class="bi bi-mortarboard me-1"></i>AYT
+                </button>
+            </div>
+            <div id="trialChartWrapParentPane" class="trial-chart-wrap-inner"></div>`;
+
+        const paneId = 'trialChartWrapParentPane';
+        const styleActive = (which) => {
+            wrap.querySelectorAll('.parent-exam-tab-btn').forEach((b) => {
+                const on = b.getAttribute('data-exam-tab') === which;
+                b.classList.toggle('btn-parent-cta', on);
+                b.classList.toggle('parent-panel-outline-btn', !on);
+            });
+        };
+
+        const paint = (which) => {
+            styleActive(which);
+            const series = which === 'ayt' ? aytSeries : tytSeries;
+            const stroke = which === 'ayt' ? '#7c3aed' : '#2563eb';
+            const areaRgb = which === 'ayt' ? '124,58,237' : '59,130,246';
+            renderTrialChart(series, paneId, stroke, areaRgb);
+        };
+
+        wrap.querySelectorAll('.parent-exam-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => paint(btn.getAttribute('data-exam-tab') || 'tyt'));
+        });
+
+        const defaultTab = tytSeries.length >= 2 ? 'tyt' : (aytSeries.length >= 2 ? 'ayt' : 'tyt');
+        paint(defaultTab);
+    }
+
+    function fmtTrialDetailDate(detail) {
+        const raw = detail?.examDate ?? detail?.ExamDate;
+        if (!raw) return '';
+        const dt = new Date(raw);
+        if (Number.isNaN(dt.getTime())) return '';
+        return dt.toLocaleDateString('tr-TR');
+    }
+
+    function renderParentTrialsTable(trialExams) {
+        const tbody = document.getElementById('parentTrialsTbody');
+        if (!tbody) return;
+        const list = Array.isArray(trialExams) ? trialExams : [];
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-3">Henüz deneme kaydı yok.</td></tr>';
+            return;
+        }
+        const sorted = [...list].sort((a, b) => (Number(b.id ?? b.Id) || 0) - (Number(a.id ?? a.Id) || 0));
+        tbody.innerHTML = sorted.map((t) => {
+            const id = t.id ?? t.Id;
+            const label = (t.dateLabel ?? t.DateLabel ?? '').trim() || '—';
+            const typ = (t.examType ?? t.ExamType ?? '—').toString();
+            const total = t.totalScore ?? t.TotalScore ?? t.totalNet ?? t.TotalNet ?? '—';
+            return `<tr>
+                <td class="fw-semibold">${safeHtml(label)}</td>
+                <td><span class="badge rounded-pill bg-light text-dark border">${safeHtml(typ)}</span></td>
+                <td class="text-end">${safeHtml(String(total))}</td>
+                <td class="text-end"><button type="button" class="btn btn-sm parent-panel-outline-btn parent-trial-detail-btn" data-trial-id="${Number(id)}">Detay</button></td>
+            </tr>`;
+        }).join('');
+        tbody.querySelectorAll('.parent-trial-detail-btn').forEach((btn) => {
+            btn.addEventListener('click', () => openParentTrialDetail(Number(btn.getAttribute('data-trial-id'))));
+        });
+    }
+
+    async function openParentTrialDetail(trialId) {
+        const modalEl = document.getElementById('parentTrialDetailModal');
+        const bodyEl = document.getElementById('parentTrialDetailBody');
+        const titleEl = document.getElementById('parentTrialDetailTitle');
+        if (!modalEl || !bodyEl) return;
+        bodyEl.innerHTML = '<div class="text-muted small">Yükleniyor...</div>';
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+        try {
+            const d = await fetchJson(`/ParentPanelProxy/trial-exams/${trialId}`);
+            const name = d.name ?? d.Name ?? 'Deneme';
+            const typ = d.examType ?? d.ExamType ?? '';
+            const examDate = fmtTrialDetailDate(d);
+            const totalNet = d.totalNet ?? d.TotalNet;
+            if (titleEl) {
+                const parts = [name, typ ? `(${typ})` : '', examDate].filter(Boolean);
+                titleEl.textContent = parts.join(' ');
+            }
+            const notes = (d.notes ?? d.Notes ?? '').trim();
+            const scores = d.subjectScores ?? d.SubjectScores ?? [];
+            let html = `<div class="mb-3"><div class="fw-bold">Toplam net: <span class="text-primary">${fmtNet(totalNet)}</span></div>`;
+            if (notes) html += `<div class="text-muted small mt-1">${safeHtml(notes)}</div>`;
+            html += '</div>';
+            if (!scores.length) {
+                html += '<p class="text-muted mb-0">Bu deneme için ders bazlı kayıt bulunamadı.</p>';
+                bodyEl.innerHTML = html;
+                return;
+            }
+            html += '<div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Ders</th><th class="text-end">D</th><th class="text-end">Y</th><th class="text-end">B</th><th class="text-end">Net</th></tr></thead><tbody>';
+            for (const s of scores) {
+                const subj = s.subjectName ?? s.SubjectName ?? '—';
+                const c = s.correctAnswers ?? s.CorrectAnswers ?? 0;
+                const w = s.wrongAnswers ?? s.WrongAnswers ?? 0;
+                const em = s.emptyAnswers ?? s.EmptyAnswers ?? 0;
+                const net = s.netScore ?? s.NetScore ?? 0;
+                html += `<tr><td>${safeHtml(subj)}</td><td class="text-end">${c}</td><td class="text-end">${w}</td><td class="text-end">${em}</td><td class="text-end fw-semibold">${fmtNet(net)}</td></tr>`;
+            }
+            html += '</tbody></table></div>';
+            bodyEl.innerHTML = html;
+        } catch (e) {
+            bodyEl.innerHTML = `<div class="alert alert-danger mb-0">${safeHtml(e?.message || 'Detay yüklenemedi.')}</div>`;
+        }
+    }
+
+    function renderUpcoming(weekly) {
+        const list = document.getElementById('upcomingList');
+        if (!list) return;
+        const items = [];
+        (weekly || []).forEach(day => {
+            const schedules = day.schedules || day.Schedules || [];
+            schedules.forEach(s => {
+                const dt = getNextDateForDay(s.dayOfWeek ?? s.DayOfWeek, s.startTime ?? s.StartTime);
+                items.push({
+                    when: dt,
+                    title: s.subjectName || s.SubjectName || 'Etüt',
+                    topic: s.topic || s.Topic || '',
+                    time: `${(s.startTime || s.StartTime || '').substring(0,5)} - ${(s.endTime || s.EndTime || '').substring(0,5)}`
+                });
+            });
+        });
+        items.sort((a, b) => a.when - b.when);
+        const next = items.slice(0, 5);
+        if (!next.length) {
+            list.innerHTML = '<div class="text-muted small">Yaklaşan etüt bulunamadı.</div>';
+            return;
+        }
+        list.innerHTML = next.map(x => `
+            <div class="upcoming-item">
+                <div>
+                    <div class="upcoming-title">${x.title}</div>
+                    <div class="upcoming-sub">${x.topic || 'Konu belirtilmemiş'}</div>
+                </div>
+                <div class="text-end">
+                    <div class="upcoming-title">${dayNames[x.when.getDay()]}</div>
+                    <div class="upcoming-sub">${x.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function loadAsParentViewer() {
+        document.getElementById('parentTrialsSection')?.classList.remove('d-none');
+        const data = await fetchJson('/ParentPanelProxy/dashboard');
+        let weeklyNormalized = [];
+        try {
+            const weeklyRaw = await fetchJson('/ParentPanelProxy/schedule/weekly');
+            weeklyNormalized = normalizeWeeklySchedulePayload(weeklyRaw);
+        } catch {
+            /* etüt listesi isteğe bağlı; dashboard yine gösterilir */
+        }
+        const studentName = data?.studentName ?? data?.StudentName ?? '';
+        const ai = (data?.aiSummary ?? data?.AISummary ?? '').toString();
+
+        const hello = document.getElementById('parentHelloTitle');
+        if (hello && studentName)
+            hello.textContent = `Merhaba, ${studentName} velisi`;
+
+        const trialExams = data?.trialExams ?? data?.TrialExams ?? [];
+        renderParentTrialsTable(trialExams);
+        const { tyt, ayt } = splitParentTrialsByExamType(trialExams);
+        renderParentTrialChartsSplit(tyt, ayt);
+        const n = trialExams.length;
+        setText('parentTotalTrials', n > 0 ? `${n} (TYT: ${tyt.length}, AYT: ${ayt.length})` : '0');
+        setText('parentWeekMinutes', '0 dk');
+        setText('parentTotalXp', '0');
+
+        const quickText = n > 0
+            ? `Öğrencinin son denemeleri veli panelinde TYT ve AYT olarak ayrı gösteriliyor (TYT: ${tyt.length}, AYT: ${ayt.length}).`
+            : (studentName ? `${studentName} için henüz deneme kaydı bulunmuyor.` : 'Henüz deneme kaydı bulunmuyor.');
+        setText('parentAiSummaryText', quickText);
+        setText('parentAiCoachText', ai || 'Özet hazırlanıyor...');
+
+        renderUpcoming(weeklyNormalized);
+    }
+
+    async function load() {
+        const isParentViewer = document.querySelector('.parent-summary-page')?.dataset.parentViewer === 'true';
+        if (isParentViewer) {
+            try {
+                await loadAsParentViewer();
+            } catch (err) {
+                console.error('Veli özeti yüklenemedi', err);
+                document.getElementById('parentTrialsSection')?.classList.remove('d-none');
+                const tb = document.getElementById('parentTrialsTbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="4" class="text-muted py-3">Denemeler yüklenemedi.</td></tr>';
+                const detail = err && err.message ? String(err.message).slice(0, 400) : '';
+                setText('parentAiSummaryText', 'Veriler yüklenirken bir hata oluştu.');
+                setText('parentAiCoachText', detail || 'Lütfen bağlantıyı kontrol edip sayfayı yenileyin.');
+                const ul = document.getElementById('upcomingList');
+                if (ul) ul.innerHTML = '<div class="text-muted small">Yaklaşan etüt bulunamadı.</div>';
+            }
+            return;
+        }
+
+        try {
+            const [examList, examStats, pomodoroStats, weeklySchedule, xpSummary] = await Promise.all([
+                fetchJson('/Exam/List'),
+                fetchJson('/Exam/Stats'),
+                fetchJson('/Pomodoro/Stats'),
+                fetchJson('/Pomodoro/WeeklySchedule'),
+                fetchJson('/LeaderboardProxy/GetXpSummary')
+            ]);
+
+            const trials = examList?.trials || examList?.Trials || [];
+            renderTrialChart(trials);
+
+            const totalTrials = examStats?.totalTrials ?? examStats?.TotalTrials ?? 0;
+            const weekMinutes = pomodoroStats?.weekMinutes ?? pomodoroStats?.WeekMinutes ?? 0;
+            const totalXp = xpSummary?.totalXp ?? xpSummary?.TotalXp ?? 0;
+
+            setText('parentTotalTrials', String(totalTrials));
+            setText('parentWeekMinutes', `${weekMinutes} dk`);
+            setText('parentTotalXp', String(totalXp));
+
+            const quickText = `Bu hafta ${totalTrials} deneme verisi ve ${weekMinutes} dakika çalışma kaydı analiz edildi.`;
+            setText('parentAiSummaryText', quickText);
+            setText('parentAiCoachText', buildCoachSummary(examStats, pomodoroStats, xpSummary));
+
+            renderUpcoming(weeklySchedule || []);
+        } catch (err) {
+            console.error('Veli özeti yüklenemedi', err);
+            setText('parentAiSummaryText', 'Veriler yüklenirken bir hata oluştu.');
+            setText('parentAiCoachText', 'Lütfen bağlantıyı kontrol edip sayfayı yenileyin.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', load);
+})();
+</script>
+}
